@@ -1,59 +1,11 @@
-import { fromBech32, normalizeBech32, toBech32 } from "@cosmjs/encoding";
 import CosmosDirectory from "./CosmosDirectory";
+import _ from "lodash";
+import { mapAsync, makeClient } from './utils';
+import { DelegationResponse } from "../types/Wallet";
+import { CosmjsQueryClient, NetworkClient } from "../types/Client";
+
 
 const directory = new CosmosDirectory();
-import _ from "lodash";
-import {
-  setupStakingExtension,
-  QueryClient,
-  setupBankExtension,
-  setupDistributionExtension,
-  setupMintExtension,
-  setupGovExtension,
-  setupIbcExtension,
-  StakingExtension,
-  MintExtension,
-  GovExtension,
-  IbcExtension,
-  BankExtension,
-  DistributionExtension
-} from "@cosmjs/stargate";
-import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
-import { DelegationResponse } from "../types/Client";
-
-
-type mapFunction = (v: any, i: any ,a: any) => Promise<any>;
-
-const mapAsync = async (array: any[], fn: mapFunction): Promise<any | boolean> => {
-  let promises = await Promise.allSettled(array.map(fn));
-  return promises.map((p) => {
-    if (p.status == "fulfilled") {
-      return p.value;
-    } else {
-      return false;
-    }
-  });
-};
-
-const makeClient = async (rpcUrl: string) => {
-  const tmClient = await Tendermint34Client.connect(rpcUrl);
-  return QueryClient.withExtensions(
-    tmClient,
-    setupStakingExtension,
-    setupIbcExtension,
-    setupBankExtension,
-    setupDistributionExtension,
-    setupMintExtension,
-    setupGovExtension
-  );
-}; 
-
-type CosmjsQueryClient = QueryClient & StakingExtension & MintExtension & GovExtension & IbcExtension & BankExtension & DistributionExtension;
-
-interface NetworkClient { 
-  name: string;
-  client: CosmjsQueryClient;
-}
 
 
 
@@ -64,7 +16,7 @@ export class NetworksHandler {
   }
   public static async Create(networks: string[]) {
     const clients = await mapAsync(networks, async (n) => {
-      const client = await makeClient(n === "cosmoshub" ? "https://rpc-cosmoshub.ecostake.com" :  directory.rpcUrl(n));
+      const client = await makeClient(directory.rpcUrl(n));
       return {
         name: n,
         client
