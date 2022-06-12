@@ -1,18 +1,9 @@
 import express from "express";
-import mongoose from 'mongoose';
-import * as dotenv from 'dotenv';
 
-import { PortfolioHandler, AccountHandler } from './utils/Wallet';
-import { addAccount } from "./db/controller";
+import { AccountHandler } from './utils/Wallet';
+import { DatabaseHandler } from "./db/controller";
 
 //import cron from "node-cron";
-
-
-interface IAddAccount { 
-    userId: string;
-    addresses: string[];
-    portfolios: PortfolioHandler[];
-}
 
 
 const app = express();
@@ -24,12 +15,6 @@ app.get("/", async (req, res) => {
         ["cosmoshub", "juno", "akash", "sifchain", "chihuahua", "cerberus"]
     );
     const all = portfolio;
-    const addRequest: IAddAccount = {
-        userId: "allo",
-        addresses: all.addresses,
-        portfolios: all.portfolios
-    }
-    await addAccount(addRequest);
     res.json(all);
 })
 

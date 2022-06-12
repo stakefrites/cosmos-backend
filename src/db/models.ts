@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
-import { PortfolioHandler, IPortfolio, IAccount } from '../utils/Wallet';
+import { IAccount } from "../types/Database";
 
 
+// @TODO: Update schema after adding the helper function that gets the normalized data
 const accountSchema = new mongoose.Schema({
   userId: {type: String, required: true},
   addresses: [String],
-  portfolios: [Mixed]
 });
 
 export const AccountModel = mongoose.model<IAccount>("Account", accountSchema);

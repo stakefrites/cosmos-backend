@@ -8,7 +8,7 @@ import {
   setupIbcExtension,
 } from "@cosmjs/stargate";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
-import { mapFunction } from "../types/Client";
+import { mapFunction } from "../types/Wallet";
 
 export const mapAsync = async (array: any[], fn: mapFunction): Promise<any | boolean> => {
   let promises = await Promise.allSettled(array.map(fn));

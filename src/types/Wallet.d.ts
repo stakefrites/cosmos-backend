@@ -1,41 +1,83 @@
-import {
-  QueryClient,
-  StakingExtension,
-  MintExtension,
-  GovExtension,
-  IbcExtension,
-  BankExtension,
-  DistributionExtension,
-  Coin
-} from "@cosmjs/stargate";
+export type mapFunction = (v: any, i: any, a: any) => Promise<any>;
+export type Currency = "usd" | "cad" | "eur";
 
-interface Delegation {
-  delegatorAddress: string;
-  validatorAddress: string;
-  shares: string;
+
+
+export interface NetworkClient { 
+  name: string;
+  client:  CosmjsQueryClient;
+}
+
+
+//
+
+export interface IUser { 
+  address: string;
+  hash: string;
+}
+
+
+export interface IWalletParams { 
+    name: string;
+    address: string;
+}
+
+
+interface IWalletBalance { 
+  delegations: IBalance;
+  rewards: IBalance;
+  balance: IBalance;
+  unbounding: IBalance;
+  total: IBalance;
+}
+
+
+interface ITotal { 
+  [key: string]: IBalance;
 }
 
 
 
-interface DelegationResponse {
-  delegation?: Delegation;
-  balance?: Coin;
+export interface IWallet { 
+  address: string;
+  network: string;
+  denom: string;
+  decimals: number;
+  tokens: ITokens;
+  private _client: any
 }
 
-interface PageResponse {
-  nextKey: Uint8Array;
-  total: Long;
+
+interface IBalance {
+  denom: string;
+  amount: number;
 }
 
-interface QueryValidatorDelegationsResponse {
-  delegationResponses: DelegationResponse[];
-  pagination?: PageResponse;
+export interface IAccount { 
+  addresses: string[];
+  portfolios: IPortfolio[];
+  tokens: ITokens[];
 }
 
-interface SingleDelegationResponse { 
-    delegatorAddress: string,
-    validatorAddress: string,
-    shares :string
+export interface IPortfolio { 
+  address: string;
+  wallets: any[];
 }
 
-type CosmjsQueryClient = QueryClient & StakingExtension & MintExtension & GovExtension & IbcExtension & BankExtension & DistributionExtension;
+
+
+export interface ITokens { 
+  total: IBalance[];
+  delegations: IBalance[];
+  balance: IBalance[];
+  rewards: IBalance[];
+  unbounding: IBalance[];
+  redelegations: IBalance[];
+}
+
+
+export interface IAddAccount { 
+    userId: string;
+    addresses: string[];
+    portfolios: IPortfolio[];
+}

@@ -1,50 +1,19 @@
-import CosmosDirectory from "./CosmosDirectory";
-import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import _ from "lodash";
-import { mapAsync, makeClient } from './utils';
-import { DelegationResponse } from "../types/Wallet";
-import { CosmjsQueryClient } from "../types/Client";
-import { Coin } from "@cosmjs/stargate";
+import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { Decimal } from "@cosmjs/math";
+
+import CosmosDirectory from "./CosmosDirectory";
+import { mapAsync, makeClient } from './utils';
+
+import {  IWalletBalance, ITotal } from "../types/Wallet";
+import { DelegationResponse, CosmjsQueryClient, UnbondingDelegation, UnbondingDelegationEntry } from "../types/Client";
+
 
 
 const directory = new CosmosDirectory();
 
 const reduce = (input: any[], decimals :number): Decimal => { 
   return input.reduce((acc: Decimal, data: any) => acc.plus(Decimal.fromAtomics(data.balance.amount, decimals)), Decimal.zero(decimals));
-}
-
-interface IBalance {
-  denom: string;
-  amount: number;
-}
-
-
-interface IWalletBalance { 
-  delegations: IBalance;
-  rewards: IBalance;
-  balance: IBalance;
-  unbounding: IBalance;
-  total: IBalance;
-}
-
-export interface UnbondingDelegation {
-    /** delegator_address is the bech32-encoded address of the delegator. */
-    delegatorAddress: string;
-    /** validator_address is the bech32-encoded address of the validator. */
-    validatorAddress: string;
-    /** entries are the unbonding delegation entries. */
-    entries: UnbondingDelegationEntry[];
-}
-
-export interface UnbondingDelegationEntry {
-    /** creation_height is the height which the unbonding took place. */
-    creationHeight: Long;
-    /** completion_time is the unix time for unbonding completion. */
-    /** initial_balance defines the tokens initially scheduled to receive at completion. */
-    initialBalance: string;
-    /** balance defines the tokens to receive at completion. */
-    balance: string;
 }
 
 
@@ -59,23 +28,6 @@ const getAddress = async (address: string, network: string) => {
 
 }
 
-interface ITotal { 
-  [key: string]: IBalance;
-}
-
-
-export interface IPortfolio { 
-  address: string;
-  name: string;
-}
-
-
-export interface IAccount { 
-  addresses: IPortfolio[];
-  portfolios: PortfolioHandler[];
-
-}
-
 export class AccountHandler { 
   addresses: string[];
   portfolios: PortfolioHandler[];
@@ -86,7 +38,7 @@ export class AccountHandler {
     this.tokens = {total : [], balance: [], rewards: [], delegations: [], unbounding: []};
   };
   public static async Create(addresses: string[], networksName: string[]): Promise<AccountHandler> {
-    const portfolios = await mapAsync(addresses, async (address) => { 
+    const portfolios = await mapAsync(addresses, async (address: string) => { 
       return await PortfolioHandler.Create(address, networksName);
     })
     const account = new AccountHandler(addresses, portfolios);
@@ -210,7 +162,7 @@ export class PortfolioHandler {
     this.wallets = wallets;
   }
   public static async Create(address: string, networksName: string[]): Promise<PortfolioHandler> {
-    const wallets = await mapAsync(networksName, async (network) => { 
+    const wallets = await mapAsync(networksName, async (network: string) => { 
       const wallet = await WalletHandler.Create(await getAddress(address, network), network);
       return wallet;
     })
