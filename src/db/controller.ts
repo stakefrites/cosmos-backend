@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { IAddAccount, IUser, IAccount } from '../types/Wallet';
+import {  IUser, IAccount } from '../types/Wallet';
 import { AccountModel, UserModel } from './models';
 import * as dotenv from 'dotenv';
 
@@ -34,5 +34,15 @@ export class DatabaseHandler {
             return false
         }
         return account
+    }
+
+    getAllAccounts = async () => { 
+        const accounts = await AccountModel.find();
+        return accounts;
+    }
+
+    updateAccount = async (id: string, a: IAccount) => { 
+        const updated = await AccountModel.findByIdAndUpdate(id, a);
+        return updated;
     }
 }
