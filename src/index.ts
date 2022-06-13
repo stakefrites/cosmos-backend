@@ -2,11 +2,10 @@ import express from "express";
 
 import { AccountHandler } from './utils/Wallet';
 import { DatabaseHandler } from './db/controller';
-
-//import cron from "node-cron";
-import { IAccountConfig } from './types/Wallet';
-
 import AuthRouter from "./routes/auth";
+import {refreshAccountJob, refreshAccounts } from "./jobs/job"
+
+import { IAccountConfig } from './types/Wallet';
 
 const myAccounts: IAccountConfig[] = [
     {
@@ -23,7 +22,10 @@ const myAccounts: IAccountConfig[] = [
 const port = process.env.PORT || 3000;
 
 const app = express();
+refreshAccountJob.start();
 const db = new DatabaseHandler();
+
+
 
 app.use(express.json())
 app.use("/auth", AuthRouter);
@@ -40,6 +42,14 @@ app.get("/", async (req, res) => {
     res.json({
         status: "success",
         account: created._id
+    });
+
+})
+
+app.get("/test", async (req, res) => {
+    await refreshAccounts();
+    res.json({
+        status: "success",
     });
 
 })
