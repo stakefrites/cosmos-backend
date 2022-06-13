@@ -12,8 +12,8 @@ export interface NetworkClient {
 //
 
 export interface IUser { 
-  address: string;
-  hash: string;
+  username: string;
+  password: string;
 }
 
 
@@ -55,6 +55,7 @@ export interface IAccount {
   accounts: IAccountConfig[];
   portfolios: IPortfolio[];
   tokens: ITokens[];
+  userId: string;
 }
 
 export interface IAddAccount { 
@@ -67,7 +68,7 @@ export interface IAddAccount {
 
 export interface IPortfolio { 
   account: IAccountConfig;
-  wallets: any[];
+  wallets: IWallet[];
 }
 
 // WALLET 
@@ -78,7 +79,6 @@ export interface IWallet {
   denom: string;
   decimals: number;
   tokens: ITokens;
-  _client: any
 }
 
 
