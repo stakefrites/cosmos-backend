@@ -1,9 +1,9 @@
 import express from 'express';
 
-import { AccountHandler } from '../utils/Wallet';
-import { DatabaseHandler } from '../db/controller';
+import { AccountHandler } from '../../utils/Wallet';
+import { DatabaseHandler } from '../../db/controller';
 
-import { IAccountConfig } from '../types/Wallet';
+import { IAccountConfig } from '../../types/Wallet';
 
 interface ICreateAccount { 
     accounts: IAccountConfig[];
@@ -15,7 +15,7 @@ const router = express.Router();
 const db = new DatabaseHandler();
 
 
-router.post("/account", async (req, res) => {
+router.post("/", async (req, res) => {
     const config: ICreateAccount = req.body.config;
     const found = await db.getAccount(config.userId);
     console.log(found)
@@ -41,7 +41,7 @@ router.post("/account", async (req, res) => {
 })
 
 
-router.get("/account/:userId", async (req, res) => {
+router.get("/:userId", async (req, res) => {
     const { userId } = req.params;
     const found = await db.getAccount(userId);
     if (!found) { 

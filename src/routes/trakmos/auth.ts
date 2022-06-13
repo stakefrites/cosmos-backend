@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from "bcrypt";
 
-import { DatabaseHandler } from '../db/controller';
+import { DatabaseHandler } from '../../db/controller';
 
 const router = express.Router();
 const db = new DatabaseHandler();

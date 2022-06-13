@@ -1,6 +1,5 @@
 import express from "express";
 
-import AuthRouter from "./routes/auth";
 import TrakmosRouter from "./routes/trakmos";
 import {refreshTrakmosAccountsJob } from "./jobs/job"
 
@@ -14,7 +13,6 @@ refreshTrakmosAccountsJob.start();
 
 
 app.use(express.json())
-app.use("/auth", AuthRouter);
 app.use("/trakmos", TrakmosRouter);
 
 
