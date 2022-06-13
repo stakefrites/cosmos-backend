@@ -5,7 +5,7 @@ import { Decimal } from "@cosmjs/math";
 import CosmosDirectory from "./CosmosDirectory";
 import { mapAsync, makeClient } from './utils';
 
-import {  IWalletBalance, ITotal } from "../types/Wallet";
+import { IWalletBalance, ITotal, IAccount, IAccountConfig, IWallet, ITokens, IPortfolio } from '../types/Wallet';
 import { DelegationResponse, CosmjsQueryClient, UnbondingDelegation, UnbondingDelegationEntry } from "../types/Client";
 
 
@@ -29,20 +29,29 @@ const getAddress = async (address: string, network: string) => {
 }
 
 export class AccountHandler { 
-  addresses: string[];
+  accounts: IAccountConfig[];
   portfolios: PortfolioHandler[];
   tokens: IWalletBalance | any;
-  constructor(addresses: string[], portfolios: PortfolioHandler[]) {
-    this.addresses = addresses;
+  constructor(accounts: IAccountConfig[], portfolios: PortfolioHandler[]) {
+    this.accounts = accounts;
     this.portfolios = portfolios;
     this.tokens = {total : [], balance: [], rewards: [], delegations: [], unbounding: []};
   };
-  public static async Create(addresses: string[], networksName: string[]): Promise<AccountHandler> {
-    const portfolios = await mapAsync(addresses, async (address: string) => { 
-      return await PortfolioHandler.Create(address, networksName);
+  public static async Create(accounts: IAccountConfig[], networksName: string[]): Promise<AccountHandler> {
+    const portfolios = await mapAsync(accounts, async (account: IAccountConfig) => { 
+      return await PortfolioHandler.Create(account, networksName);
     })
-    const account = new AccountHandler(addresses, portfolios);
+    const account = new AccountHandler(accounts, portfolios);
     account.getAll();
+    return account;
+  }
+
+  public static async Load(a: IAccount): Promise<AccountHandler> {
+    const portfolios = await mapAsync(a.portfolios, async (p: IPortfolio) => {
+      return await PortfolioHandler.Load(p.account,p.wallets);
+    })
+    const account = new AccountHandler(a.accounts, portfolios);
+    account.tokens = a.tokens;
     return account;
   }
 
@@ -57,14 +66,16 @@ export class AccountHandler {
   getTotal() { 
     let total: ITotal = {};
     this.portfolios.forEach(portfolio => { 
-      portfolio.wallets.forEach(wallet => { 
-        const amount = wallet.tokens.total.amount;
-        const denom = wallet.denom;
-        if (!total[denom]) {
-          total[wallet.denom] = { amount, denom };
-        } else { 
-          total[wallet.denom].amount += amount;
-        }
+      portfolio.wallets.forEach(wallet => {
+        wallet.tokens.total.forEach(tot => { 
+          const amount = tot.amount;
+          const denom = tot.denom;
+          if (!total[denom]) {
+            total[wallet.denom] = { amount, denom };
+          } else { 
+            total[wallet.denom].amount += amount;
+          }
+        })
       })
     })
     this.tokens.total = Object.values(total).map(bal => ({
@@ -77,14 +88,16 @@ export class AccountHandler {
   getBalance() { 
     let balance: ITotal = {};
     this.portfolios.forEach(portfolio => { 
-      portfolio.wallets.forEach(wallet => { 
-        const amount = wallet.tokens.balance.amount;
-        const denom = wallet.denom;
-        if (!balance[denom]) {
-          balance[wallet.denom] = { amount, denom };
-        } else { 
-          balance[wallet.denom].amount += amount;
-        }
+      portfolio.wallets.forEach(wallet => {
+        wallet.tokens.balance.forEach(bal => { 
+          const amount = bal.amount;
+          const denom = bal.denom;
+          if (!balance[denom]) {
+            balance[wallet.denom] = { amount, denom };
+          } else { 
+            balance[wallet.denom].amount += amount;
+          }
+        })
       })
     })
     this.tokens.balance = Object.values(balance).map(bal => ({
@@ -96,19 +109,21 @@ export class AccountHandler {
   getRewards() { 
     let rewards: ITotal = {};
     this.portfolios.forEach(portfolio => { 
-      portfolio.wallets.forEach(wallet => { 
-        const amount = wallet.tokens.rewards.amount;
-        const denom = wallet.denom;
-        if (!rewards[denom]) {
-          rewards[wallet.denom] = { amount, denom };
-        } else { 
-          rewards[wallet.denom].amount += amount;
-        }
+      portfolio.wallets.forEach(wallet => {
+        wallet.tokens.rewards.forEach(reward => { 
+          const amount = reward.amount;
+          const denom = reward.denom;
+          if (!rewards[denom]) {
+            rewards[wallet.denom] = { amount, denom };
+          } else { 
+            rewards[wallet.denom].amount += amount;
+          }
+        })
       })
     })
-    this.tokens.rewards = Object.values(rewards).map(bal => ({
-      amount: bal.amount,
-      denom: bal.denom
+    this.tokens.rewards = Object.values(rewards).map(reward => ({
+      amount: reward.amount,
+      denom: reward.denom
     }));
   }
 
@@ -116,32 +131,36 @@ export class AccountHandler {
     let delegations: ITotal = {};
     this.portfolios.forEach(portfolio => { 
       portfolio.wallets.forEach(wallet => { 
-        const amount = wallet.tokens.delegations.amount;
-        const denom = wallet.denom;
-        if (!delegations[denom]) {
+        wallet.tokens.delegations.forEach(delegation => { 
+          const amount = delegation.amount;  
+          const denom = delegation.denom;
+           if (!delegations[denom]) {
           delegations[wallet.denom] = { amount, denom };
         } else { 
           delegations[wallet.denom].amount += amount;
         }
+        })
       })
     })
-    this.tokens.delegations = Object.values(delegations).map(bal => ({
-      amount: bal.amount,
-      denom: bal.denom
+    this.tokens.delegations = Object.values(delegations).map(delegation => ({
+      amount: delegation.amount,
+      denom: delegation.denom
     }));
   }
 
   getUnbounding() { 
     let unbounding: ITotal = {};
     this.portfolios.forEach(portfolio => { 
-      portfolio.wallets.forEach(wallet => { 
-        const amount = wallet.tokens.unbounding.amount;
-        const denom = wallet.denom;
-        if (!unbounding[denom]) {
-          unbounding[wallet.denom] = { amount, denom };
-        } else { 
-          unbounding[wallet.denom].amount += amount;
-        }
+      portfolio.wallets.forEach(wallet => {
+        wallet.tokens.unbounding.forEach(un => { 
+          const amount = un.amount;
+          const denom = un.denom;
+          if (!unbounding[denom]) {
+            unbounding[wallet.denom] = { amount, denom };
+          } else { 
+            unbounding[wallet.denom].amount += amount;
+          }
+        })
       })
     })
     this.tokens.unbounding = Object.values(unbounding).map(bal => ({
@@ -154,33 +173,44 @@ export class AccountHandler {
 }
 
 
-export class PortfolioHandler { 
-  address: string;
+export class PortfolioHandler implements IPortfolio { 
+  account: IAccountConfig;
   wallets: WalletHandler[];
-  constructor(address: string, wallets: WalletHandler[]) {
-    this.address = address;
+  constructor(account: IAccountConfig, wallets: WalletHandler[]) {
+    this.account = account;
     this.wallets = wallets;
   }
-  public static async Create(address: string, networksName: string[]): Promise<PortfolioHandler> {
+  public static async Create(account: IAccountConfig, networksName: string[]): Promise<PortfolioHandler> {
     const wallets = await mapAsync(networksName, async (network: string) => { 
-      const wallet = await WalletHandler.Create(await getAddress(address, network), network);
-      return wallet;
+       if (network === "evmos" && account.evmosAddress) {
+         return await WalletHandler.Create(await getAddress(account.evmosAddress, network), network);
+       } else {  
+         return await WalletHandler.Create(await getAddress(account.bech32Address, network), network);
+       }
     })
-    const portfolio = new PortfolioHandler(address, wallets);
+    const portfolio = new PortfolioHandler(account, wallets);
+    return portfolio;
+  }
+
+   public static async Load(account: IAccountConfig, wallets: IWallet[]): Promise<PortfolioHandler> {
+     const walletHandlers: WalletHandler[] = await mapAsync(wallets, async (wallet: IWallet) => {
+       return await WalletHandler.Load(wallet);
+    })
+    const portfolio = new PortfolioHandler(account, walletHandlers);
     return portfolio;
   }
 }
 
 
 
-export class WalletHandler {
+export class WalletHandler implements IWallet {
   address: string;
   network: string;
   denom: string;
   decimals: number;
-  tokens: IWalletBalance;
+  tokens: ITokens;
   delegations?: DelegationResponse[]
-  private _client: CosmjsQueryClient;
+  _client: CosmjsQueryClient;
   constructor(address: string, network: string, client: CosmjsQueryClient, denom: string, decimals: number) {
     this.address = address;
     this.network = network
@@ -188,26 +218,12 @@ export class WalletHandler {
     this.denom = denom;
     this.decimals = decimals;
     this.tokens = {
-      delegations: {
-        denom,
-        amount: 0
-      },
-      balance: {
-       denom,
-        amount: 0
-      },
-      rewards: {
-        denom,
-        amount: 0
-      },
-      unbounding: {
-        denom,
-        amount: 0
-      },
-      total: {
-        denom, 
-        amount: 0
-      }
+      delegations: [],
+      balance: [],
+      rewards: [],
+      unbounding: [],
+      redelegations: [],
+      total: []
     }
   }
 
@@ -216,6 +232,13 @@ export class WalletHandler {
     const chain = await directory.getChain(network);
     const handler = new WalletHandler(address, network, client,  chain.chain.denom, chain.chain.decimals);
     await handler.fetchAll();
+    return handler;
+  }
+
+  public static async Load(w: IWallet) {
+    const client = await makeClient(directory.rpcUrl(w.network));
+    const handler = new WalletHandler(w.address, w.network, client, w.denom, w.decimals);
+    handler.tokens = w.tokens;
     return handler;
   }
 
@@ -263,6 +286,9 @@ export class WalletHandler {
     return {amount: amount.toFloatApproximation(), denom}
   }
 
+  fetchRedelegations = async () => { 
+  }
+
   fetchBalance = async () => {
     const balance = await this._client.bank.balance(this.address, this.denom);
     const amount = Decimal.fromAtomics(balance.amount, this.decimals);
@@ -276,14 +302,14 @@ export class WalletHandler {
     const balance = await this.fetchBalance();
     const unbounding = await this.fetchUnboundingDelegations();
     const total = delegations.amount + rewards.amount + balance.amount;
-    this.tokens.delegations = delegations;
-    this.tokens.rewards = rewards;
-    this.tokens.balance = balance;
-    this.tokens.unbounding = unbounding;
-    this.tokens.total = {
+    this.tokens.delegations.push(delegations);
+    this.tokens.rewards.push(rewards);
+    this.tokens.balance.push(balance);
+    this.tokens.unbounding.push(unbounding);
+    this.tokens.total.push({
       denom: this.denom,
       amount: total
-    }
+    })
   }
 
 

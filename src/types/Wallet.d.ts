@@ -29,6 +29,7 @@ interface IWalletBalance {
   balance: IBalance;
   unbounding: IBalance;
   total: IBalance;
+  redelegations: IBalance;
 }
 
 
@@ -37,6 +38,39 @@ interface ITotal {
 }
 
 
+interface IBalance {
+  denom: string;
+  amount: number;
+}
+
+// ACCOUNT
+
+export interface IAccountConfig { 
+  bech32Address: string;
+  evmosAddress?: string;
+  name: string;
+}
+
+export interface IAccount { 
+  accounts: IAccountConfig[];
+  portfolios: IPortfolio[];
+  tokens: ITokens[];
+}
+
+export interface IAddAccount { 
+    userId: string;
+    addresses: string[];
+    portfolios: IPortfolio[];
+}
+
+// PORTFOLIO
+
+export interface IPortfolio { 
+  account: IAccountConfig;
+  wallets: any[];
+}
+
+// WALLET 
 
 export interface IWallet { 
   address: string;
@@ -44,24 +78,7 @@ export interface IWallet {
   denom: string;
   decimals: number;
   tokens: ITokens;
-  private _client: any
-}
-
-
-interface IBalance {
-  denom: string;
-  amount: number;
-}
-
-export interface IAccount { 
-  addresses: string[];
-  portfolios: IPortfolio[];
-  tokens: ITokens[];
-}
-
-export interface IPortfolio { 
-  address: string;
-  wallets: any[];
+  _client: any
 }
 
 
@@ -72,12 +89,5 @@ export interface ITokens {
   balance: IBalance[];
   rewards: IBalance[];
   unbounding: IBalance[];
-  redelegations: IBalance[];
-}
-
-
-export interface IAddAccount { 
-    userId: string;
-    addresses: string[];
-    portfolios: IPortfolio[];
+  redelegations?: IBalance[];
 }
