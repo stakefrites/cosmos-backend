@@ -28,32 +28,47 @@ const getAddress = async (address: string, network: string) => {
 
 }
 
-export class AccountHandler { 
+export class AccountHandler implements IAccount { 
   accounts: IAccountConfig[];
   portfolios: PortfolioHandler[];
   tokens: IWalletBalance | any;
-  constructor(accounts: IAccountConfig[], portfolios: PortfolioHandler[]) {
+  userId: string;
+  constructor(accounts: IAccountConfig[], portfolios: PortfolioHandler[], userId: string) {
     this.accounts = accounts;
     this.portfolios = portfolios;
-    this.tokens = {total : [], balance: [], rewards: [], delegations: [], unbounding: []};
+    this.tokens = { total: [], balance: [], rewards: [], delegations: [], unbounding: [] };
+    this.userId = userId;
   };
-  public static async Create(accounts: IAccountConfig[], networksName: string[]): Promise<AccountHandler> {
+  public static async Create(accounts: IAccountConfig[], networksName: string[], userId: string): Promise<AccountHandler> {
     const portfolios = await mapAsync(accounts, async (account: IAccountConfig) => { 
       return await PortfolioHandler.Create(account, networksName);
     })
-    const account = new AccountHandler(accounts, portfolios);
+    const account = new AccountHandler(accounts, portfolios, userId);
     account.getAll();
     return account;
   }
 
-  public static async Load(a: IAccount): Promise<AccountHandler> {
+  public static async Load(a: IAccount, userId: string): Promise<AccountHandler> {
     const portfolios = await mapAsync(a.portfolios, async (p: IPortfolio) => {
       return await PortfolioHandler.Load(p.account,p.wallets);
     })
-    const account = new AccountHandler(a.accounts, portfolios);
+    const account = new AccountHandler(a.accounts, portfolios, userId);
     account.tokens = a.tokens;
     return account;
   }
+
+  serialize(): IAccount {
+    const serializedPortfolios = this.portfolios.map(portfolio => { 
+      return portfolio.serialize();
+    })
+    return {
+      userId: this.userId,
+      accounts: this.accounts,
+      portfolios: serializedPortfolios,
+      tokens: this.tokens,
+    }
+  }
+
 
   getAll() { 
     this.getTotal();
@@ -198,6 +213,16 @@ export class PortfolioHandler implements IPortfolio {
     })
     const portfolio = new PortfolioHandler(account, walletHandlers);
     return portfolio;
+   }
+  
+  serialize(): IPortfolio { 
+     const serializedWallets = this.wallets.map(wallet => { 
+       return wallet.serialize();
+     })
+    return {
+      account: this.account,
+      wallets: serializedWallets
+    }
   }
 }
 
@@ -240,6 +265,16 @@ export class WalletHandler implements IWallet {
     const handler = new WalletHandler(w.address, w.network, client, w.denom, w.decimals);
     handler.tokens = w.tokens;
     return handler;
+  }
+
+  serialize(): IWallet { 
+    return {
+      address: this.address,
+      network: this.network,
+      denom: this.denom,
+      decimals: this.decimals,
+      tokens: this.tokens
+    }
   }
 
 
