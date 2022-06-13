@@ -17,11 +17,6 @@ export interface IUser {
 }
 
 
-export interface IWalletParams { 
-    name: string;
-    address: string;
-}
-
 
 interface IWalletBalance { 
   delegations: IBalance;
@@ -38,10 +33,20 @@ interface ITotal {
 }
 
 
+export interface ITokens { 
+  total: IBalance[];
+  delegations: IBalance[];
+  balance: IBalance[];
+  rewards: IBalance[];
+  unbounding: IBalance[];
+  redelegations?: IBalance[];
+}
+
 interface IBalance {
   denom: string;
   amount: number;
 }
+
 
 // ACCOUNT
 
@@ -58,11 +63,6 @@ export interface IAccount {
   userId: string;
 }
 
-export interface IAddAccount { 
-    userId: string;
-    addresses: string[];
-    portfolios: IPortfolio[];
-}
 
 // PORTFOLIO
 
@@ -81,13 +81,3 @@ export interface IWallet {
   tokens: ITokens;
 }
 
-
-
-export interface ITokens { 
-  total: IBalance[];
-  delegations: IBalance[];
-  balance: IBalance[];
-  rewards: IBalance[];
-  unbounding: IBalance[];
-  redelegations?: IBalance[];
-}
