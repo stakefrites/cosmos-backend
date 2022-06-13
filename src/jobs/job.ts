@@ -6,7 +6,7 @@ import { mapAsync } from '../utils/utils';
 
 const db = new DatabaseHandler();
 
-export const refreshAccounts = async () => { 
+export const refreshTrakmosAccounts = async () => { 
     const accounts = await db.getAllAccounts();
     const updates = await mapAsync(accounts, async (account) => {
         console.log(`refreshing ${account._id}`)
@@ -18,4 +18,4 @@ export const refreshAccounts = async () => {
 
 }
 
-export const refreshAccountJob = cron.schedule("0 * * * *", refreshAccounts);
+export const refreshTrakmosAccountsJob = cron.schedule("0 * * * *", refreshTrakmosAccounts);
