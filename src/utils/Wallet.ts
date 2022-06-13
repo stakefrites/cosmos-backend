@@ -69,6 +69,11 @@ export class AccountHandler implements IAccount {
     }
   }
 
+  async refresh() {
+    await mapAsync(this.portfolios, async portfolio => { 
+      await portfolio.refresh();
+    })
+  }
 
   getAll() { 
     this.getTotal();
@@ -77,6 +82,7 @@ export class AccountHandler implements IAccount {
     this.getDelegations();
     this.getUnbounding();
   }
+
 
   getTotal() { 
     let total: ITotal = {};
@@ -223,6 +229,12 @@ export class PortfolioHandler implements IPortfolio {
       account: this.account,
       wallets: serializedWallets
     }
+  }
+
+  async refresh() {
+    await mapAsync(this.wallets,async wallet => { 
+      await wallet.fetchAll();
+    } )
   }
 }
 
