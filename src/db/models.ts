@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IAccount, IUser } from "../types/Wallet";
+import { IAccount, IUser, IToken } from "../types/Wallet";
 
 
 // @TODO: Update schema after adding the helper function that gets the normalized data
@@ -16,6 +16,19 @@ const userSchema = new mongoose.Schema({
   password: {type: String, required: true}
 })
 
-export const UserModel = mongoose.model<IUser>("User", userSchema)
+const tokenSchema = new mongoose.Schema({
+  coingeckoId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  price: {
+    usd: Number,
+    cad: Number,
+    eur: Number
+  }
+})
 
+export const TokenModel = mongoose.model<IToken>("Token", tokenSchema);
+export const UserModel = mongoose.model<IUser>("User", userSchema)
 export const AccountModel = mongoose.model<IAccount>("Account", accountSchema);
