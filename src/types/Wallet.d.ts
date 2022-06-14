@@ -81,3 +81,14 @@ export interface IWallet {
   tokens: ITokens;
 }
 
+interface ITokenValue { 
+  usd: number;
+  eur: number;
+  cad: number;
+}
+
+interface IToken { 
+  coingeckoId: string;
+  price: ITokenValue;
+}
+
