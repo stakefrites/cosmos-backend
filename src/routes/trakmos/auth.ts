@@ -23,7 +23,7 @@ router.post("/signup", async (req, res) => {
         const created = await db.createUser({ username: user.username, password: hash });
         res.json({
             status: "success",
-            user: created
+            user: created._id
         })
     } else { 
         const isAuth = await compare(user.password, found.password);
