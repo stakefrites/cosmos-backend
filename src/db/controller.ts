@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import {  IUser, IAccount } from '../types/Wallet';
-import { AccountModel, UserModel } from './models';
+import {  IUser, IAccount, IToken } from '../types/Wallet';
+import { AccountModel, UserModel, TokenModel } from './models';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -44,5 +44,26 @@ export class DatabaseHandler {
     updateAccount = async (id: string, a: IAccount) => { 
         const updated = await AccountModel.findByIdAndUpdate(id, a);
         return updated;
+    }
+    getAllTokens = async () => { 
+        const allTokens = await TokenModel.find();
+        return allTokens;
+    }
+    updatePrice = async (id: string, t: IToken) => {
+        const updated = await TokenModel.findByIdAndUpdate(id, t);
+        return updated;
+    }
+
+    addToken = async (t: IToken) => {
+        const added = await TokenModel.create(t);
+        return added;
+    }
+    getTokenById = async (id: string) => { 
+        const token = await TokenModel.findOne({ coingeckoId: id });
+        if (!token) {
+            return false
+        } else { 
+            return token;
+        }
     }
 }
