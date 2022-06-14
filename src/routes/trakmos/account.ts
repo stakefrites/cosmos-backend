@@ -9,6 +9,7 @@ interface ICreateAccount {
     accounts: IAccountConfig[];
     networks: string[];
     userId: string;
+    currency: string;
 }
 
 const router = express.Router();
@@ -18,13 +19,12 @@ const db = new DatabaseHandler();
 router.post("/", async (req, res) => {
     const config: ICreateAccount = req.body.config;
     const found = await db.getAccount(config.userId);
-    console.log(found)
     if (found) {
         res.json({
             status: "error",
             message: "An account already exists"
         })
-    } else { 
+    } else {
          const portfolio = await AccountHandler.Create(
             config.accounts,
             config.networks,
