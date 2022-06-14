@@ -203,7 +203,7 @@ export class PortfolioHandler implements IPortfolio {
   }
   public static async Create(account: IAccountConfig, networksName: string[]): Promise<PortfolioHandler> {
     const wallets = await mapAsync(networksName, async (network: string) => { 
-       if (network === "evmos" && account.evmosAddress) {
+      if (network === "evmos" && account.evmosAddress) {
          return await WalletHandler.Create(await getAddress(account.evmosAddress, network), network);
        } else {  
          return await WalletHandler.Create(await getAddress(account.bech32Address, network), network);
@@ -246,7 +246,6 @@ export class WalletHandler implements IWallet {
   denom: string;
   decimals: number;
   tokens: ITokens;
-  delegations?: DelegationResponse[]
   _client: CosmjsQueryClient;
   constructor(address: string, network: string, client: CosmjsQueryClient, denom: string, decimals: number) {
     this.address = address;
@@ -267,7 +266,7 @@ export class WalletHandler implements IWallet {
   public static async Create(address: string, network: string): Promise<WalletHandler> { 
     const client = await makeClient(directory.rpcUrl(network));
     const chain = await directory.getChain(network);
-    const handler = new WalletHandler(address, network, client,  chain.chain.denom, chain.chain.decimals);
+    const handler = new WalletHandler(address, network, client, chain.chain.denom, chain.chain.decimals);
     await handler.fetchAll();
     return handler;
   }
@@ -309,7 +308,6 @@ export class WalletHandler implements IWallet {
         (acc: any, data: UnbondingDelegation) => acc.plus(
             data.entries.reduce(
               (newAcc: any, data: UnbondingDelegationEntry) => {
-                console.log(Decimal.fromAtomics(data.balance, this.decimals), newAcc);
                 return newAcc.plus(
                   Decimal.fromAtomics(
                     data.balance,
