@@ -10,16 +10,12 @@ import {
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 import { mapFunction } from "../types/Wallet";
 
-export const mapAsync = async (array: any[], fn: mapFunction): Promise<any | boolean> => {
-  let promises = await Promise.allSettled(array.map(fn));
-  return promises.map((p) => {
-    if (p.status == "fulfilled") {
-      return p.value;
-    } else {
-      return false;
-    }
-  });
-};
+export function mapAsync(arr: any, fn: Function){
+  return arr.reduce((lastProm: Promise<any>, val: any) => lastProm.then(
+    (resultArrSoFar) => fn(val)
+      .then((result: any) => [...resultArrSoFar, result])
+  ), Promise.resolve([]));
+}
 
 export const makeClient = async (rpcUrl: string) => {
   const tmClient = await Tendermint34Client.connect(rpcUrl);
@@ -33,3 +29,9 @@ export const makeClient = async (rpcUrl: string) => {
     setupGovExtension
   );
 }; 
+
+export const sleep = (seconds: number) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, seconds * 1000);
+  });
+}
