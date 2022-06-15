@@ -28,7 +28,8 @@ router.post("/", async (req, res) => {
          const portfolio = await AccountHandler.Create(
             config.accounts,
             config.networks,
-            config.userId
+            config.userId,
+            config.currency
         );
         const all = portfolio.serialize();
         const created = await db.createAccount(all);

@@ -58,17 +58,19 @@ export interface IAccountConfig {
 
 export interface IAccount { 
   accounts: IAccountConfig[];
-  portfolios: IPortfolio[];
+  portfolios: IPortfolio[] | boolean[];
   tokens: ITokens[];
   userId: string;
+  currency: string;
 }
 
 
 // PORTFOLIO
 
+
 export interface IPortfolio { 
   account: IAccountConfig;
-  wallets: IWallet[];
+  wallets: IWallet[] | boolean[];
 }
 
 // WALLET 
@@ -81,14 +83,48 @@ export interface IWallet {
   tokens: ITokens;
 }
 
-interface ITokenValue { 
+// Tokens/Currency
+
+export interface ITokenValue { 
   usd: number;
   eur: number;
   cad: number;
 }
 
-interface IToken { 
+export interface IToken { 
+  network: string;
+  base: string;
+  name: string;
+  symbol: string;
+  units: IDenomUnits[];
   coingeckoId: string;
   price: ITokenValue;
 }
 
+// Validators
+
+export interface IEntity { 
+  name: string;
+  identity: string;
+  validators: IValidator[];
+}
+
+
+// Entity
+
+export interface IValidator { 
+  name: string;
+  identity: string;
+  votingPower: number;
+  delegators: IDelegator[];
+  network: string;
+  address: string;
+
+}
+
+// Delegator delegation
+
+export interface IDelegator { 
+  address: string;
+  delegation: Coin
+}

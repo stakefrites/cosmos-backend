@@ -5,7 +5,7 @@ import { Decimal } from "@cosmjs/math";
 import CosmosDirectory from "./CosmosDirectory";
 import { mapAsync, makeClient } from './utils';
 
-import { IWalletBalance, ITotal, IAccount, IAccountConfig, IWallet, ITokens, IPortfolio } from '../types/Wallet';
+import { IWalletBalance, ITotal, IAccount, IAccountConfig, IWallet, ITokens, IPortfolio, Currency } from '../types/Wallet';
 import { DelegationResponse, CosmjsQueryClient, UnbondingDelegation, UnbondingDelegationEntry } from "../types/Client";
 
 
@@ -33,17 +33,19 @@ export class AccountHandler implements IAccount {
   portfolios: PortfolioHandler[];
   tokens: IWalletBalance | any;
   userId: string;
-  constructor(accounts: IAccountConfig[], portfolios: PortfolioHandler[], userId: string) {
+  currency: string;
+  constructor(accounts: IAccountConfig[], portfolios: PortfolioHandler[], userId: string,currency: string) {
     this.accounts = accounts;
     this.portfolios = portfolios;
+    this.currency = currency;
     this.tokens = { total: [], balance: [], rewards: [], delegations: [], unbounding: [] };
     this.userId = userId;
   };
-  public static async Create(accounts: IAccountConfig[], networksName: string[], userId: string): Promise<AccountHandler> {
+  public static async Create(accounts: IAccountConfig[], networksName: string[], userId: string, currency: string): Promise<AccountHandler> {
     const portfolios = await mapAsync(accounts, async (account: IAccountConfig) => { 
       return await PortfolioHandler.Create(account, networksName);
     })
-    const account = new AccountHandler(accounts, portfolios, userId);
+    const account = new AccountHandler(accounts, portfolios, userId, currency);
     account.getAll();
     return account;
   }
@@ -52,7 +54,7 @@ export class AccountHandler implements IAccount {
     const portfolios = await mapAsync(a.portfolios, async (p: IPortfolio) => {
       return await PortfolioHandler.Load(p.account,p.wallets);
     })
-    const account = new AccountHandler(a.accounts, portfolios, userId);
+    const account = new AccountHandler(a.accounts, portfolios, userId, a.currency);
     account.tokens = a.tokens;
     return account;
   }
@@ -66,11 +68,12 @@ export class AccountHandler implements IAccount {
       accounts: this.accounts,
       portfolios: serializedPortfolios,
       tokens: this.tokens,
+      currency: this.currency
     }
   }
 
   async refresh() {
-    await mapAsync(this.portfolios, async portfolio => { 
+    await mapAsync(this.portfolios, async (portfolio:any) => { 
       await portfolio.refresh();
     })
   }
@@ -86,8 +89,14 @@ export class AccountHandler implements IAccount {
 
   getTotal() { 
     let total: ITotal = {};
-    this.portfolios.forEach(portfolio => { 
+    this.portfolios.forEach(portfolio => {
+      if (!portfolio) { 
+        return;
+      }
       portfolio.wallets.forEach(wallet => {
+        if (!wallet) { 
+          return;
+        }
         wallet.tokens.total.forEach(tot => { 
           const amount = tot.amount;
           const denom = tot.denom;
@@ -110,6 +119,9 @@ export class AccountHandler implements IAccount {
     let balance: ITotal = {};
     this.portfolios.forEach(portfolio => { 
       portfolio.wallets.forEach(wallet => {
+        if (!wallet) { 
+          return;
+        }
         wallet.tokens.balance.forEach(bal => { 
           const amount = bal.amount;
           const denom = bal.denom;
@@ -131,6 +143,9 @@ export class AccountHandler implements IAccount {
     let rewards: ITotal = {};
     this.portfolios.forEach(portfolio => { 
       portfolio.wallets.forEach(wallet => {
+        if (!wallet) { 
+          return;
+        }
         wallet.tokens.rewards.forEach(reward => { 
           const amount = reward.amount;
           const denom = reward.denom;
@@ -151,7 +166,10 @@ export class AccountHandler implements IAccount {
   getDelegations() { 
     let delegations: ITotal = {};
     this.portfolios.forEach(portfolio => { 
-      portfolio.wallets.forEach(wallet => { 
+      portfolio.wallets.forEach(wallet => {
+        if (!wallet) { 
+          return;
+        }
         wallet.tokens.delegations.forEach(delegation => { 
           const amount = delegation.amount;  
           const denom = delegation.denom;
@@ -173,6 +191,9 @@ export class AccountHandler implements IAccount {
     let unbounding: ITotal = {};
     this.portfolios.forEach(portfolio => { 
       portfolio.wallets.forEach(wallet => {
+        if (!wallet) { 
+          return;
+        }
         wallet.tokens.unbounding.forEach(un => { 
           const amount = un.amount;
           const denom = un.denom;
@@ -213,7 +234,7 @@ export class PortfolioHandler implements IPortfolio {
     return portfolio;
   }
 
-   public static async Load(account: IAccountConfig, wallets: IWallet[]): Promise<PortfolioHandler> {
+   public static async Load(account: IAccountConfig, wallets: IWallet[] | boolean[]): Promise<PortfolioHandler> {
      const walletHandlers: WalletHandler[] = await mapAsync(wallets, async (wallet: IWallet) => {
        return await WalletHandler.Load(wallet);
     })
@@ -232,7 +253,7 @@ export class PortfolioHandler implements IPortfolio {
   }
 
   async refresh() {
-    await mapAsync(this.wallets,async wallet => { 
+    await mapAsync(this.wallets,async (wallet:any) => { 
       await wallet.fetchAll();
     } )
   }
