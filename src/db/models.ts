@@ -7,7 +7,8 @@ const accountSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", unique: true },
   tokens: mongoose.Schema.Types.Mixed,
   portfolios: mongoose.Schema.Types.Mixed,
-  accounts: mongoose.Schema.Types.Mixed
+  accounts: mongoose.Schema.Types.Mixed,
+  currency : String
 });
 
 
@@ -16,12 +17,17 @@ const userSchema = new mongoose.Schema({
   password: {type: String, required: true}
 })
 
-const tokenSchema = new mongoose.Schema({
+const tokenSchema = new mongoose.Schema<IToken>({
   coingeckoId: {
     type: String,
-    required: true,
-    unique: true
   },
+  base: {type:String , unique: true, require:true},
+  name: {type:String },
+  symbol: String,
+  units: {
+    type: mongoose.Schema.Types.Mixed,
+  },
+  network: String,
   price: {
     usd: Number,
     cad: Number,

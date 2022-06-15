@@ -1,16 +1,38 @@
 import cron from "node-cron";
 
 import { DatabaseHandler } from '../db/controller';
+import CosmosDirectory from "../utils/CosmosDirectory";
 import { Price } from "../utils/Price";
 import { AccountHandler } from '../utils/Wallet';
-import { mapAsync } from '../utils/utils';
+import { mapAsync, sleep } from '../utils/utils';
+import { IToken } from "../types/Wallet";
 
 const db = new DatabaseHandler();
+const directory = new CosmosDirectory();
 const priceApi = new Price();
+
+const addTokenData = async (networkName: string) => {
+    const token = await directory.getTokenData(networkName);
+    const tokens: IToken[] = token.assets.map((t: any) => {
+        return {
+            network: token.chain_name,
+            base: t.base,
+            name: t.name,
+            symbol: t.symbol,
+            units: t.denom_units,
+            coingeckoId: t.coingecko_id || false
+        }
+    });
+
+    const saved = mapAsync(tokens, async (t: IToken) => {
+        db.addToken(t);
+    })
+    
+ }
 
 const refreshTrakmosAccounts = async () => { 
     const accounts = await db.getAllAccounts();
-    await mapAsync(accounts, async (account) => {
+    await mapAsync(accounts, async (account: any) => {
         console.log(`refreshing ${account._id}`)
         const handler = await AccountHandler.Load(account, account.userId);
         await handler.refresh();
@@ -21,13 +43,28 @@ const refreshTrakmosAccounts = async () => {
 }
 
 const refreshPrices = async () => {
-    console.log("refreshing prices")
     const tokens = await db.getAllTokens();
-    await mapAsync(tokens, async token => {
-        const prices = await priceApi.getPrice(token.coingeckoId);
-        await db.updatePrice(token._id.toString(), prices);
+    await mapAsync(tokens, async (token:any) => {
+        if (token.coingeckoId) {
+            await sleep(1.2);
+            const prices = await priceApi.getPrice(token.coingeckoId);
+            const data = {
+                price: prices[token.coingeckoId]
+            }
+            await db.updatePrice(token._id.toString(), data);   
+        }
+    })
+}
+
+const refreshTokenData = async () => {
+    const chains = await directory.getChains();
+    const chainNames = Object.keys(chains);
+    await mapAsync(chainNames, async (name: any) => {
+        await sleep(1);
+        await addTokenData(name);
      })
-} 
+ }
 
 export const refreshTrakmosAccountsJob = cron.schedule("0 * * * *", refreshTrakmosAccounts);
-export const refreshPricesJob = cron.schedule("*/1 * * * *", refreshPrices);
+export const refreshPricesJob = cron.schedule("*/5 * * * *", refreshPrices);
+export const refreshTokenDataJob = cron.schedule("0 0 * * 0", refreshTokenData);
