@@ -49,14 +49,19 @@ export class DatabaseHandler {
         const allTokens = await TokenModel.find();
         return allTokens;
     }
-    updatePrice = async (id: string, t: IToken) => {
+    updatePrice = async (id: string, t: any) => {
         const updated = await TokenModel.findByIdAndUpdate(id, t);
         return updated;
     }
 
     addToken = async (t: IToken) => {
-        const added = await TokenModel.create(t);
-        return added;
+        const found = await TokenModel.findOne({ name: t.name });
+        if (!found) {
+            const added = await TokenModel.create(t);
+            return added;
+        } else { 
+            return found;
+        }
     }
     getTokenById = async (id: string) => { 
         const token = await TokenModel.findOne({ coingeckoId: id });
@@ -65,5 +70,9 @@ export class DatabaseHandler {
         } else { 
             return token;
         }
+    } 
+    updateTokenById = async (id: string, t: IToken) => { 
+        const updated = await TokenModel.findOneAndUpdate({ coingeckoId: id }, t);
+        return updated;
     }
 }
