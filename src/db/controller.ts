@@ -60,7 +60,8 @@ export class DatabaseHandler {
             const added = await TokenModel.create(t);
             return added;
         } else { 
-            return found;
+            const updated = await TokenModel.findByIdAndUpdate(found._id, t);
+            return updated;
         }
     }
     getTokenById = async (id: string) => { 
