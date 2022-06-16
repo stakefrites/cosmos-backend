@@ -69,5 +69,5 @@ const refreshTokenData = async () => {
 
 export const refreshTrakmosAccountsJob = cron.schedule("0 * * * *", refreshTrakmosAccounts);
 export const refreshPricesJob = cron.schedule("*/30 * * * *", refreshPrices);
-//export const refreshTokenDataJob = cron.schedule("0 0 * * 0", refreshTokenData);
-export const refreshTokenDataJob = cron.schedule("0 * * * *", refreshTokenData);
+export const refreshTokenDataJob = cron.schedule("0 0 * * 0", refreshTokenData);
+//export const refreshTokenDataJob = cron.schedule("0 * * * *", refreshTokenData);
