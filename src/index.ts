@@ -24,9 +24,7 @@ app.use("/tokens", TokensRouter);
 
 
 app.get("/", async (req, res) => {
-    const validator = await ValidatorHandler.Create("junovaloper1uepjmgfuk6rnd0djsglu88w7d0t49lml7kqufu", "juno");
-    console.log(await validator.getDelegators())
-    res.send("allo")
+    res.send("allo mon tabarnak");
 
 })
 
