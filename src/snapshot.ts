@@ -24,7 +24,7 @@ const run = async () => {
 
 
 };
-*/
+
 
 import { fromBech32, normalizeBech32, toBech32 } from "@cosmjs/encoding";
 
@@ -34,11 +34,8 @@ export interface Coin {
 }
 
 export interface Delegation {
-  /** delegator_address is the bech32-encoded address of the delegator. */
   delegatorAddress: string;
-  /** validator_address is the bech32-encoded address of the validator. */
   validatorAddress: string;
-  /** shares define the delegation shares received. */
   shares: string;
 }
 
@@ -48,21 +45,14 @@ export interface DelegationResponse {
 }
 
 export interface PageResponse {
-  /**
-   * next_key is the key to be passed to PageRequest.key to
-   * query the next page most efficiently
-   */
+  
   nextKey: Uint8Array;
-  /**
-   * total is total number of results available if PageRequest.count_total
-   * was set, its value is undefined otherwise
-   */
+
   total: Long;
 }
 
 export interface QueryValidatorDelegationsResponse {
   delegationResponses: DelegationResponse[];
-  /** pagination defines the pagination in the response. */
   pagination?: PageResponse;
 }
 
@@ -115,12 +105,14 @@ const run = async () => {
   console.log(res.validator?.tokens);
   //const validCosmosAddresses = await getAllValidDelegators("cosmosvaloper1uepjmgfuk6rnd0djsglu88w7d0t49lmljdpae2", client.getClient("cosmoshub"));
   //console.log(validCosmosAddresses.length)
- /*  const bothAddresses = validJunoAddresses.map((a) => {
+  const bothAddresses = validJunoAddresses.map((a) => {
     return `${a} - ${toBech32("cosmos", fromBech32(a).data)}`
   })
-  fs.writeFileSync("junoValidators.csv", bothAddresses.join("\n") ) */
+  fs.writeFileSync("junoValidators.csv", bothAddresses.join("\n") ) 
   fs.writeFileSync("junoValidatorsVALIDONCOSMOS.csv", validJunoAddresses.join("\n"))
   //fs.writeFileSync("cosmosValidators.csv", validCosmosAddresses.join("\n") )
   
 };
 run();
+
+*/

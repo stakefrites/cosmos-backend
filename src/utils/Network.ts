@@ -1,4 +1,4 @@
-import CosmosDirectory from "./CosmosDirectory";
+/* import CosmosDirectory from "./CosmosDirectory";
 import _ from "lodash";
 import { mapAsync, makeClient } from './utils';
 import { DelegationResponse } from "../types/Wallet";
@@ -75,3 +75,4 @@ export class WalletHandler {
 
 
 }
+ */
