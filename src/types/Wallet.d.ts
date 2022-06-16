@@ -98,7 +98,8 @@ export interface IToken {
   symbol: string;
   units: IDenomUnits[];
   coingeckoId: string;
-  price: ITokenValue;
+  price: ITokenValue | false;
+  image: string;
 }
 
 // Validators

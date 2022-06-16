@@ -20,6 +20,7 @@ const addTokenData = async (networkName: string) => {
             name: t.name,
             symbol: t.symbol,
             units: t.denom_units,
+            image: t.logo_URIs.png ? t.logo_URIs.png : t.logo_URIs.svg,
             coingeckoId: t.coingecko_id || false
         }
     });
@@ -44,6 +45,7 @@ const refreshTrakmosAccounts = async () => {
 
 const refreshPrices = async () => {
     const tokens = await db.getAllTokens();
+    console.log("refreshing prices");
     await mapAsync(tokens, async (token:any) => {
         if (token.coingeckoId) {
             await sleep(1.2);
@@ -66,5 +68,6 @@ const refreshTokenData = async () => {
  }
 
 export const refreshTrakmosAccountsJob = cron.schedule("0 * * * *", refreshTrakmosAccounts);
-export const refreshPricesJob = cron.schedule("*/5 * * * *", refreshPrices);
-export const refreshTokenDataJob = cron.schedule("0 0 * * 0", refreshTokenData);
+export const refreshPricesJob = cron.schedule("*/30 * * * *", refreshPrices);
+//export const refreshTokenDataJob = cron.schedule("0 0 * * 0", refreshTokenData);
+export const refreshTokenDataJob = cron.schedule("0 * * * *", refreshTokenData);

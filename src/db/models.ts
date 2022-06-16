@@ -28,6 +28,7 @@ const tokenSchema = new mongoose.Schema<IToken>({
     type: mongoose.Schema.Types.Mixed,
   },
   network: String,
+  image: String,
   price: {
     usd: Number,
     cad: Number,
