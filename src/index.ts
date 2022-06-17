@@ -29,7 +29,7 @@ app.get("/", async (req, res) => {
 })
 
 app.get("*/:id", (req, res) => { 
-    res.send("DÉGÈLES BIGUE, c'est quoi ÇA ====> " + req.params.id + "C'est mon serveur ti-coco.");
+    res.send("DÉGÈLES BIGUE, c'est quoi ÇA ====> " + req.params.id + " C'est mon serveur ti-coco.");
 })
 
 
