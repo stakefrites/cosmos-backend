@@ -1,7 +1,6 @@
 import axios from "axios";
 
-
-class CosmosDirectory  {
+class CosmosDirectory {
   directoryProtocol: string;
   directoryDomain: string;
   chainsUrl: string;
@@ -17,40 +16,39 @@ class CosmosDirectory  {
     this.validatorsUrl = `${this.directoryProtocol}://validators.${this.directoryDomain}`;
   }
 
-  rpcUrl = (name: string)  => {
+  rpcUrl = (name: string) => {
     return this.rpcBase + "/" + name;
-  }
+  };
 
-  restUrl = (name: string)  => {
+  restUrl = (name: string) => {
     return this.restBase + "/" + name;
-  }
-
+  };
 
   getChains = async (): Promise<any> => {
     return axios
       .get(this.chainsUrl)
       .then((res) => res.data)
       .then((data) => (Array.isArray(data) ? data : data.chains)) // deprecate
-      .then((data) => data.reduce((a: any, v: any) => ({ ...a, [v.path]: v }), {}));
-  }
+      .then((data) =>
+        data.reduce((a: any, v: any) => ({ ...a, [v.path]: v }), {})
+      );
+  };
 
   getChainData = async (name: string): Promise<any> => {
     return axios
       .get([this.chainsUrl, name, "chain"].join("/"))
       .then((res) => res.data);
-  }
+  };
 
   getChain = async (name: string): Promise<any> => {
-    return axios
-      .get([this.chainsUrl, name].join("/"))
-      .then((res) => res.data);
-  }
+    return axios.get([this.chainsUrl, name].join("/")).then((res) => res.data);
+  };
 
-   getTokenData = async  (name: string): Promise<any> => {
+  getTokenData = async (name: string): Promise<any> => {
     return axios
       .get([this.chainsUrl, name, "assetlist"].join("/"))
       .then((res) => res.data);
-  }
+  };
 }
 
 export default CosmosDirectory;

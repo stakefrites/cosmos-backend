@@ -1,24 +1,19 @@
 export type mapFunction = (v: any, i: any, a: any) => Promise<any>;
 export type Currency = "usd" | "cad" | "eur";
 
-
-
-export interface NetworkClient { 
+export interface NetworkClient {
   name: string;
-  client:  CosmjsQueryClient;
+  client: CosmjsQueryClient;
 }
-
 
 //
 
-export interface IUser { 
+export interface IUser {
   username: string;
   password: string;
 }
 
-
-
-interface IWalletBalance { 
+interface IWalletBalance {
   delegations: IBalance;
   rewards: IBalance;
   balance: IBalance;
@@ -27,13 +22,11 @@ interface IWalletBalance {
   redelegations: IBalance;
 }
 
-
-interface ITotal { 
+interface ITotal {
   [key: string]: IBalance;
 }
 
-
-export interface ITokens { 
+export interface ITokens {
   total: IBalance[];
   delegations: IBalance[];
   balance: IBalance[];
@@ -47,16 +40,15 @@ interface IBalance {
   amount: number;
 }
 
-
 // ACCOUNT
 
-export interface IAccountConfig { 
+export interface IAccountConfig {
   bech32Address: string;
   evmosAddress?: string;
   name: string;
 }
 
-export interface IAccount { 
+export interface IAccount {
   accounts: IAccountConfig[];
   portfolios: IPortfolio[] | boolean[];
   tokens: ITokens[];
@@ -64,18 +56,16 @@ export interface IAccount {
   currency: string;
 }
 
-
 // PORTFOLIO
 
-
-export interface IPortfolio { 
+export interface IPortfolio {
   account: IAccountConfig;
   wallets: IWallet[] | boolean[];
 }
 
-// WALLET 
+// WALLET
 
-export interface IWallet { 
+export interface IWallet {
   address: string;
   network: string;
   denom: string;
@@ -85,13 +75,13 @@ export interface IWallet {
 
 // Tokens/Currency
 
-export interface ITokenValue { 
+export interface ITokenValue {
   usd: number;
   eur: number;
   cad: number;
 }
 
-export interface IToken { 
+export interface IToken {
   network: string;
   base: string;
   name: string;
@@ -104,28 +94,26 @@ export interface IToken {
 
 // Validators
 
-export interface IEntity { 
+export interface IEntity {
   name: string;
   identity: string;
   validators: IValidator[];
 }
 
-
 // Entity
 
-export interface IValidator { 
+export interface IValidator {
   name: string;
   identity: string;
   votingPower: number;
   delegators: IDelegator[];
   network: string;
   address: string;
-
 }
 
 // Delegator delegation
 
-export interface IDelegator { 
+export interface IDelegator {
   address: string;
-  delegation: Coin
+  delegation: Coin;
 }
