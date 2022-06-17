@@ -1,4 +1,14 @@
-import cron from "node-cron";
+import nodeCron from "node-cron";
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
+const cron = require('cronitor')(process.env.CRONITOR_API_KEY, {
+    environment: process.env.NODE_ENV,
+});
+
+cron.wraps(nodeCron);
+
 
 import { DatabaseHandler } from '../db/controller';
 import CosmosDirectory from "../utils/CosmosDirectory";
@@ -43,6 +53,7 @@ const refreshTrakmosAccounts = async () => {
 
 }
 
+
 const refreshPrices = async () => {
     const tokens = await db.getAllTokens();
     console.log("refreshing prices");
@@ -56,6 +67,7 @@ const refreshPrices = async () => {
             await db.updatePrice(token._id.toString(), data);   
         }
     })
+    return "ok for prices"
 }
 
 const refreshTokenData = async () => {
@@ -67,7 +79,7 @@ const refreshTokenData = async () => {
      })
  }
 
-export const refreshTrakmosAccountsJob = cron.schedule("0 * * * *", refreshTrakmosAccounts);
-export const refreshPricesJob = cron.schedule("*/30 * * * *", refreshPrices);
-export const refreshTokenDataJob = cron.schedule("0 0 * * 0", refreshTokenData);
+export const refreshTrakmosAccountsJob = cron.schedule("Refresh Trakmos Accounts", "0 * * * *", refreshTrakmosAccounts);
+export const refreshPricesJob = cron.schedule("Refresh Prices","*/15 * * * *", refreshPrices);
+export const refreshTokenDataJob = cron.schedule("Refresh Token Data","0 0 * * 0", refreshTokenData);
 //export const refreshTokenDataJob = cron.schedule("0 * * * *", refreshTokenData);
