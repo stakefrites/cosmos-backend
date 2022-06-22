@@ -1,18 +1,18 @@
-import mongoose from "mongoose";
-import { IUser, IAccount, IToken } from "../types/Wallet";
-import { AccountModel, UserModel, TokenModel } from "./models";
-import * as dotenv from "dotenv";
+import * as dotenv from 'dotenv';
+import mongoose from 'mongoose';
+
+import { IAccount, IToken, IUser } from '../types/Wallet';
+import { AccountModel, TokenModel, UserModel } from './models';
 
 dotenv.config();
-mongoose.connect(process.env.MONGO_DB_URI || "mongodb+srv://localhost:27017");
+mongoose.connect(process.env.MONGO_DB_URI || 'mongodb+srv://localhost:27017').then(r => console.log('connected'));
 
 export class DatabaseHandler {
   createUser = async (u: IUser) => {
-    const user = await UserModel.create({
+    return await UserModel.create({
       username: u.username,
       password: u.password,
     });
-    return user;
   };
 
   getUserByUsername = async (username: string) => {
@@ -23,8 +23,7 @@ export class DatabaseHandler {
     return user;
   };
   createAccount = async (a: IAccount) => {
-    const account = await AccountModel.create(a);
-    return account;
+    return await AccountModel.create(a);
   };
   getAccount = async (userId: string) => {
     const account = await AccountModel.findOne({ userId });
@@ -35,31 +34,25 @@ export class DatabaseHandler {
   };
 
   getAllAccounts = async () => {
-    const accounts = await AccountModel.find();
-    return accounts;
+    return AccountModel.find();
   };
 
   updateAccount = async (id: string, a: IAccount) => {
-    const updated = await AccountModel.findByIdAndUpdate(id, a);
-    return updated;
+    return AccountModel.findByIdAndUpdate(id, a);
   };
   getAllTokens = async () => {
-    const allTokens = await TokenModel.find();
-    return allTokens;
+    return TokenModel.find();
   };
   updatePrice = async (id: string, t: any) => {
-    const updated = await TokenModel.findByIdAndUpdate(id, t);
-    return updated;
+    return TokenModel.findByIdAndUpdate(id, t);
   };
 
   addToken = async (t: IToken) => {
     const found = await TokenModel.findOne({ name: t.name });
     if (!found) {
-      const added = await TokenModel.create(t);
-      return added;
+      return await TokenModel.create(t);
     } else {
-      const updated = await TokenModel.findByIdAndUpdate(found._id, t);
-      return updated;
+      return TokenModel.findByIdAndUpdate(found._id, t);
     }
   };
   getTokenById = async (id: string) => {
@@ -71,7 +64,6 @@ export class DatabaseHandler {
     }
   };
   updateTokenById = async (id: string, t: IToken) => {
-    const updated = await TokenModel.findOneAndUpdate({ coingeckoId: id }, t);
-    return updated;
+    return TokenModel.findOneAndUpdate({ coingeckoId: id }, t);
   };
 }

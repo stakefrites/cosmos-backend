@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --config nodemon.json src/index.ts",
+    "dev:snapshot": "nodemon --config nodemon.json src/snapshot_evmos.ts",
     "dev:debug": "nodemon --config nodemon.json --inspect-brk src/index.ts",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix",
