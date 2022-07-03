@@ -56,7 +56,6 @@ export interface QueryValidatorDelegationsResponse {
   pagination?: PageResponse;
 }
 
-import { AxiosError } from "axios";
 import { CosmjsQueryClient } from "./types/Client";
 import { NetworksHandler, WalletHandler } from "./utils/NewClient";
 import * as fs from 'fs';

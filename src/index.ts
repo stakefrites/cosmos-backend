@@ -1,17 +1,15 @@
-import express from "express";
-import cors from "cors";
+import cors from 'cors';
+import express from 'express';
 
-import TrakmosRouter from "./routes/trakmos";
-import TokensRouter from "./routes/tokens";
 import {
-  refreshTrakmosAccountsJob,
   refreshPricesJob,
   refreshTokenDataJob,
-} from "./jobs/job";
+  refreshTrakmosAccountsJob,
+} from './jobs/job';
+import TokensRouter from './routes/tokens';
+import TrakmosRouter from './routes/trakmos';
 
-import { ValidatorHandler } from "./utils/Validator";
-
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 const app = express();
 
@@ -21,14 +19,14 @@ refreshTokenDataJob.start();
 
 app.use(express.json());
 app.use(cors());
-app.use("/trakmos", TrakmosRouter);
-app.use("/tokens", TokensRouter);
+app.use('/trakmos', TrakmosRouter);
+app.use('/tokens', TokensRouter);
 
-app.get("/", async (req, res) => {
-  res.send("allo mon tabarnak");
+app.get('/', async (req, res) => {
+  res.send('allo mon tabarnak');
 });
 
-app.get("*/:id", (req, res) => {
+app.get('*/:id', (req, res) => {
   res.send(
     "DÉGÈLES BIGUE, c'est quoi ÇA ====> " +
       req.params.id +

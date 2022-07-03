@@ -1,25 +1,6 @@
-import _ from "lodash";
-import { fromBech32, toBech32 } from "@cosmjs/encoding";
-import { Decimal } from "@cosmjs/math";
-
-import CosmosDirectory from "./CosmosDirectory";
-import { mapAsync, makeClient } from "./utils";
-
-import {
-  IWalletBalance,
-  ITotal,
-  IAccount,
-  IAccountConfig,
-  IWallet,
-  ITokens,
-  IPortfolio,
-} from "../types/Wallet";
-import {
-  DelegationResponse,
-  CosmjsQueryClient,
-  UnbondingDelegation,
-  UnbondingDelegationEntry,
-} from "../types/Client";
+import { CosmjsQueryClient } from '../types/Client';
+import CosmosDirectory from './CosmosDirectory';
+import { makeClient } from './utils';
 
 const directory = new CosmosDirectory();
 
@@ -47,7 +28,7 @@ export class ValidatorHandler {
     address: string,
     network: string
   ): Promise<ValidatorHandler> {
-    const client = await makeClient(directory.rpcUrl(network));
+    const client = await makeClient('https://rpc.evmos.ezstaking.io');
     const chain = await directory.getChain(network);
     const handler = new ValidatorHandler(
       address,
@@ -60,9 +41,54 @@ export class ValidatorHandler {
   }
 
   getDelegators = async (): Promise<any> => {
-    const delegators = await this._client.staking.validatorDelegations(
-      this.address
-    );
-    return delegators;
+    const dels = [];
+
+    let nextKey: Uint8Array = Uint8Array.from([1]);
+    let firstRun = true;
+    let retry = 0;
+    let count = 1;
+    while (nextKey?.length > 0 || retry == 5) {
+      try {
+        const delegators: any =
+          firstRun === true
+            ? await this._client.staking.validatorDelegations(this.address)
+            : await this._client.staking.validatorDelegations(
+                this.address,
+                nextKey
+              );
+        firstRun = false;
+        if (!delegators.pagination) {
+          console.log('noting');
+          return;
+        }
+        dels.push(delegators.delegationResponses);
+        nextKey = delegators.pagination.nextKey;
+        console.log(nextKey?.length);
+        console.log(dels.flat().length, count);
+        count++;
+      } catch (error: any) {
+        console.log(error.message);
+        retry++;
+      }
+    }
+
+    const formatted = dels.flat().map((d: any) => {
+      const shares = d.delegation.shares / Math.pow(10, 18 + 18);
+      return {
+        address: d.delegation.delegatorAddress,
+        shares: shares.toFixed(2),
+      };
+    });
+
+    const result = {
+      tier1: formatted
+        .filter((d: any) => d.shares > 25)
+        .map((de: any) => de.address),
+      tier2: formatted
+        .filter((d: any) => d.shares > 50)
+        .map((de: any) => de.address),
+    };
+
+    return result;
   };
 }
