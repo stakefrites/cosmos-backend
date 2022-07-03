@@ -40,17 +40,25 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/:userId", async (req, res) => {
+
   const { userId } = req.params;
-  const found = await db.getAccount(userId);
-  if (!found) {
+  try {
+    const found = await db.getAccount(userId);
+    if (!found) {
+      res.json({
+        status: "error",
+        message: "Not found!",
+      });
+    } else {
+      res.json({
+        status: "success",
+        account: found,
+      });
+    }
+  } catch (e) {
     res.json({
       status: "error",
       message: "Not found!",
-    });
-  } else {
-    res.json({
-      status: "success",
-      account: found,
     });
   }
 });
