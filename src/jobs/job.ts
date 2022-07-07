@@ -1,21 +1,20 @@
-import nodeCron from "node-cron";
-import * as dotenv from "dotenv";
+import nodeCron from 'node-cron';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const cron = require("cronitor")(process.env.CRONITOR_API_KEY, {
+const cron = require('cronitor')(process.env.CRONITOR_API_KEY, {
   environment: process.env.NODE_ENV,
 });
 
 cron.wraps(nodeCron);
 
-import { DatabaseHandler } from "../db/controller";
-import CosmosDirectory from "../utils/CosmosDirectory";
-import { Price } from "../utils/Price";
-import { AccountHandler } from "../utils/Wallet";
-import { mapAsync, sleep } from "../utils/utils";
-import { IToken } from "../types/Wallet";
+import { DatabaseHandler, IPrice } from '../db/controller';
+import CosmosDirectory from '../utils/CosmosDirectory';
+import { Price } from '../utils/Price';
+import { AccountHandler } from '../utils/Wallet';
+import { mapAsync, sleep } from '../utils/utils';
 
 const db = new DatabaseHandler();
 const directory = new CosmosDirectory();
@@ -53,18 +52,18 @@ const refreshTrakmosAccounts = async () => {
 
 const refreshPrices = async () => {
   const tokens = await db.getAllTokens();
-  console.log("refreshing prices");
+  console.log('refreshing prices');
   await mapAsync(tokens, async (token: any) => {
     if (token.coingeckoId) {
       await sleep(1.2);
-      const prices = await priceApi.getPrice(token.coingeckoId);
+      const prices: IPrice[] = await priceApi.getPrice(token.coingeckoId);
       const data = {
         price: prices[token.coingeckoId],
       };
-      await db.updatePrice(token._id.toString(), data);
+      await db.updatePrice(token.id, data);
     }
   });
-  return "ok for prices";
+  return 'ok for prices';
 };
 
 const refreshTokenData = async () => {
@@ -77,18 +76,18 @@ const refreshTokenData = async () => {
 };
 
 export const refreshTrakmosAccountsJob = cron.schedule(
-  "Refresh Trakmos Accounts",
-  "0 * * * *",
+  'Refresh Trakmos Accounts',
+  '0 * * * *',
   refreshTrakmosAccounts
 );
 export const refreshPricesJob = cron.schedule(
-  "Refresh Prices",
-  "*/15 * * * *",
+  'Refresh Prices',
+  '*/15 * * * *',
   refreshPrices
 );
 export const refreshTokenDataJob = cron.schedule(
-  "Refresh Token Data",
-  "0 0 * * 0",
+  'Refresh Token Data',
+  '0 0 * * 0',
   refreshTokenData
 );
 //export const refreshTokenDataJob = cron.schedule("0 * * * *", refreshTokenData);

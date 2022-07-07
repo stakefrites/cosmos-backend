@@ -1,7 +1,7 @@
-import express from "express";
-import bcrypt from "bcrypt";
+import express from 'express';
+import bcrypt from 'bcrypt';
 
-import { DatabaseHandler } from "../../db/controller";
+import { DatabaseHandler } from '../../db/controller';
 
 const router = express.Router();
 const db = new DatabaseHandler();
@@ -14,7 +14,7 @@ const compare = async (pw: string, hash: string): Promise<boolean> => {
   return await bcrypt.compare(pw, hash);
 };
 
-router.post("/signup", async (req, res) => {
+router.post('/signup', async (req, res) => {
   const { user } = req.body;
   const found = await db.getUserByUsername(user.username);
   if (!found) {
@@ -24,43 +24,46 @@ router.post("/signup", async (req, res) => {
       password: hash,
     });
     res.json({
-      status: "success",
-      user: created._id,
+      status: 'success',
+      message: 'You account was created. We will get your hunger settled.',
+      user: created.id,
     });
   } else {
-    const isAuth = await compare(user.password, found.password);
+    const isAuth = await compare(user.password, found.password || '');
     if (!isAuth) {
       res.json({
-        status: "error",
-        message: "You are not authorized",
+        status: 'error',
+        message: 'You are not authorized',
+        user: null,
       });
     } else {
       res.json({
-        status: "success",
-        user: found._id,
+        status: 'success',
+        message: 'You had an account, you hungry one.',
+        user: found.id,
       });
     }
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post('/login', async (req, res) => {
   const { user } = req.body;
   const found = await db.getUserByUsername(user.username);
   if (!found) {
     res.json({
-      error: "User not found",
+      error: 'User not found',
     });
   } else {
-    const isAuth = await compare(user.password, found.password);
+    const isAuth = await compare(user.password, found.password || '');
     if (!isAuth) {
       res.json({
-        status: "error",
-        message: "You are not authorized",
+        status: 'error',
+        message: 'You are not authorized',
       });
     } else {
       res.json({
-        status: "success",
-        user: found._id,
+        status: 'success',
+        user: found.id,
       });
     }
   }
