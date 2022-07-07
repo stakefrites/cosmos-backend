@@ -1,32 +1,53 @@
-import * as dotenv from 'dotenv';
-import mongoose from 'mongoose';
+import * as PrismaPkg from '@prisma/client';
+const { PrismaClient } = PrismaPkg;
+const client = new PrismaClient();
 
 import { IAccount, IToken, IUser } from '../types/Wallet';
-import { AccountModel, TokenModel, UserModel } from './models';
 
-dotenv.config();
-mongoose.connect(process.env.MONGO_DB_URI || 'mongodb+srv://localhost:27017').then(r => console.log('connected'));
+export interface IPrice {
+  [key: string]: number;
+  usd: number;
+  cad: number;
+  eur: number;
+}
 
+type UpdatePriceRequest = {
+  price: IPrice;
+};
 export class DatabaseHandler {
   createUser = async (u: IUser) => {
-    return await UserModel.create({
-      username: u.username,
-      password: u.password,
+    return await client.user.create({
+      data: {
+        username: u.username,
+        password: u.password,
+      },
     });
   };
 
   getUserByUsername = async (username: string) => {
-    const user = await UserModel.findOne({ username });
+    const user = await client.user.findFirst({ where: { username } });
     if (!user) {
       return false;
     }
     return user;
   };
   createAccount = async (a: IAccount) => {
-    return await AccountModel.create(a);
+    return await client.account.create({
+      data: {
+        userId: a.userId,
+        currency: a.currency,
+        accountConfig: {
+          create: a.accounts.map((config) => ({
+            name: config.name,
+            cosmosAddress: config.cosmosAddress,
+            evmosAddress: config.evmosAddress,
+          })),
+        },
+      },
+    });
   };
-  getAccount = async (userId: string) => {
-    const account = await AccountModel.findOne({ userId });
+  getAccount = async (userId: number) => {
+    const account = await client.account.findFirst({ where: { userId } });
     if (!account) {
       return false;
     }
@@ -34,36 +55,73 @@ export class DatabaseHandler {
   };
 
   getAllAccounts = async () => {
-    return AccountModel.find();
+    return await client.account.findMany();
   };
 
-  updateAccount = async (id: string, a: IAccount) => {
-    return AccountModel.findByIdAndUpdate(id, a);
+  updateAccount = async (id: number, a: IAccount) => {
+    return await client.account.update({
+      where: { id },
+      data: {
+        userId: a.userId,
+        currency: a.currency,
+        accountConfig: {
+          create: a.accounts.map((config) => ({
+            name: config.name,
+            cosmosAddress: config.cosmosAddress,
+            evmosAddress: config.evmosAddress,
+          })),
+        },
+      },
+    });
   };
   getAllTokens = async () => {
-    return TokenModel.find();
+    return await client.token.findMany();
   };
-  updatePrice = async (id: string, t: any) => {
-    return TokenModel.findByIdAndUpdate(id, t);
+  updatePrice = async (id: number, prices: IPrice) => {
+    return await client.tokenPrice.update({
+      where: { id },
+      data: {
+        tokenId: id,
+        ...prices,
+      },
+    });
   };
 
   addToken = async (t: IToken) => {
-    const found = await TokenModel.findOne({ name: t.name });
-    if (!found) {
-      return await TokenModel.create(t);
-    } else {
-      return TokenModel.findByIdAndUpdate(found._id, t);
-    }
+    const network = await client.network.findFirst({
+      where: { name: t.network },
+    });
+    const added = await client.token.upsert({
+      where: {
+        id: t.id,
+      },
+      update: {
+        name: t.name,
+      },
+      create: {
+        name: t.name,
+        symbol: t.symbol,
+        decimals: t.decimals,
+        networkId: network?.id || 1,
+      },
+    });
   };
   getTokenById = async (id: string) => {
-    const token = await TokenModel.findOne({ coingeckoId: id });
+    const token = await client.token.findFirst({ where: {} });
     if (!token) {
       return false;
     } else {
       return token;
     }
   };
-  updateTokenById = async (id: string, t: IToken) => {
-    return TokenModel.findOneAndUpdate({ coingeckoId: id }, t);
+  updateTokenById = async (id: number, t: IToken) => {
+    return await client.token.update({
+      where: { id },
+      data: {
+        name: t.name,
+        decimals: t.decimals,
+        coinGeckoId: t.coinGeckoId,
+      },
+    });
   };
 }
