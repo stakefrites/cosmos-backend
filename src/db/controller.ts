@@ -14,6 +14,13 @@ export interface IPrice {
 type UpdatePriceRequest = {
   price: IPrice;
 };
+
+interface INetwork {
+  name: string;
+  slip44: number;
+  prefix: string;
+}
+
 export class DatabaseHandler {
   createUser = async (u: IUser) => {
     return await client.user.create({
@@ -32,6 +39,10 @@ export class DatabaseHandler {
     return user;
   };
   createAccount = async (a: IAccount) => {
+    function findIdByBase(tokens: any[], base: string): number {
+      return tokens.find((t) => t.base === base).id;
+    }
+    const tokens = await client.token.findMany();
     return await client.account.create({
       data: {
         userId: a.userId,
@@ -41,6 +52,25 @@ export class DatabaseHandler {
             name: config.name,
             cosmosAddress: config.cosmosAddress,
             evmosAddress: config.evmosAddress,
+          })),
+        },
+        portfolios: {
+          create: a.portfolios.map((portfolio) => ({
+            wallets: {
+              create: portfolio.wallets.map((wallet) => ({
+                holdings: {
+                  create: wallet.holdings.map((position) => ({
+                    type: position.type,
+                    amount: position.amount,
+                    token: {
+                      connect: {
+                        id: findIdByBase(tokens, position.token),
+                      },
+                    },
+                  })),
+                },
+              })),
+            },
           })),
         },
       },
@@ -55,7 +85,24 @@ export class DatabaseHandler {
   };
 
   getAllAccounts = async () => {
-    return await client.account.findMany();
+    return await client.account.findMany({
+      include: {
+        portfolios: {
+          include: {
+            wallets: {
+              include: {
+                holdings: true,
+                network: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   };
 
   updateAccount = async (id: number, a: IAccount) => {
@@ -78,33 +125,77 @@ export class DatabaseHandler {
     return await client.token.findMany();
   };
   updatePrice = async (id: number, prices: IPrice) => {
-    return await client.tokenPrice.update({
-      where: { id },
-      data: {
-        tokenId: id,
-        ...prices,
-      },
-    });
+    console.log(id, prices);
+    if (prices.usd) {
+      const price = await client.tokenPrice.create({
+        data: {
+          tokenId: id,
+          price: prices,
+          usd: prices.usd,
+          cad: prices.cad,
+          eur: prices.eur,
+        },
+      });
+    }
   };
-
-  addToken = async (t: IToken) => {
-    const network = await client.network.findFirst({
-      where: { name: t.network },
-    });
-    const added = await client.token.upsert({
-      where: {
-        id: t.id,
-      },
+  addNetwork = async (n: any) => {
+    const created = await client.network.upsert({
+      where: { name: n.name },
       update: {
-        name: t.name,
+        prefix: n.bech32_prefix,
+        coinType: n.slip44,
       },
       create: {
-        name: t.name,
-        symbol: t.symbol,
-        decimals: t.decimals,
-        networkId: network?.id || 1,
+        name: n.chain_name,
+        prefix: n.bech32_prefix,
+        coinType: n.slip44,
       },
     });
+    console.log(created);
+  };
+  addToken = async (t: any) => {
+    try {
+      const network = await client.network.findFirst({
+        where: { name: t.network },
+      });
+
+      const existing = await client.token.findFirst({
+        where: { name: t.name },
+      });
+
+      console.log(existing);
+
+      console.log('token', t);
+
+      if (!existing) {
+        const added = await client.token.create({
+          data: {
+            name: t.name,
+            base: t.base,
+            symbol: t.symbol,
+            networkId: network ? network.id : 1,
+            coinGeckoId: t.coinGeckoId,
+            decimals: t.decimals,
+            image: t.image,
+          },
+        });
+      } else {
+        const updated = await client.token.update({
+          where: { id: existing.id },
+          data: {
+            name: t.name,
+            base: t.base,
+            symbol: t.symbol,
+            networkId: network ? network.id : 1,
+            coinGeckoId: t.coinGeckoId,
+            decimals: t.decimals,
+            image: t.image,
+          },
+        });
+      }
+    } catch (e: any) {
+      console.log(e.message);
+    }
   };
   getTokenById = async (id: string) => {
     const token = await client.token.findFirst({ where: {} });

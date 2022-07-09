@@ -38,20 +38,19 @@ enum Currency {
   eur
 }
 
-
 model PortfolioConfigAddress {
-  id        Int      @id @default(sequence())
-  address   String
-  coinType Int    @default(118)
-  path     String  @default("m/44'/0'/0'/0/0")
-  portfolio PortfolioConfig @relation(fields: [portfolioConfigId], references: [id], onDelete: Cascade)
+  id                Int             @id @default(sequence())
+  address           String
+  coinType          Int             @default(118)
+  path              String          @default("m/44'/0'/0'/0/0")
+  portfolio         PortfolioConfig @relation(fields: [portfolioConfigId], references: [id], onDelete: Cascade)
   portfolioConfigId Int
 
 }
 
 model PortfolioConfig {
-  id            Int     @id @default(sequence())
-  account       Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  id            Int                      @id @default(sequence())
+  account       Account                  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   accountId     Int
   name          String
   evmosAddress  String?
@@ -70,12 +69,13 @@ model Portfolio {
 model Wallet {
   id          Int        @id @default(sequence())
   portfolio   Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  address     String     @unique
   portfolioId Int
   createdAt   DateTime   @default(now())
   holdings    Position[]
+  network     Network   @relation(fields: [networkId], references: [id])
+  networkId   Int
 }
-
-
 
 model Position {
   id        Int          @id @default(sequence())
@@ -84,7 +84,7 @@ model Position {
   createdAt DateTime     @default(now())
   token     Token        @relation(fields: [tokenId], references: [id], onDelete: Cascade)
   tokenId   Int
-  amount    Int
+  amount    Float
   type      PositionType
 }
 
@@ -92,37 +92,43 @@ enum PositionType {
   staked
   rewards
   balance
+  unbounding
 }
 
 model TokenPrice {
-  id        Int      @id @default(sequence())
-  token     Token    @relation(fields: [tokenId], references: [id], onDelete: Cascade)
-  tokenId   Int
+  id      Int      @id @default(sequence())
+  token   Token    @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  tokenId Int
   fetched DateTime @default(now())
-  price     Float
-  usd    Float
-    cad    Float
-    eur    Float
+  price   Json
+  usd     Float
+  cad     Float
+  eur     Float
 }
 
 model Token {
-  id        Int        @id @default(sequence())
-  name      String
-  symbol    String
-  decimals  Int
-  network   Network    @relation(fields: [networkId], references: [id], onDelete: Cascade)
-  networkId Int
+  id          Int          @id @default(sequence())
+  name        String
+  symbol      String
+  base        String?
+  decimals    Int?
+  network     Network      @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  networkId   Int
   coinGeckoId String?
-  Position  Position[]
-  Prices   TokenPrice[]
+  Position    Position[]
+  Prices      TokenPrice[]
+  image       String?
 
 }
 
 model Network {
   id        Int      @id @default(sequence())
-  name      String
+  name      String   @unique
   createdAt DateTime @default(now())
   tokens    Token[]
-  supported Boolean @default(false)
-  path String  @default("cosmoshub")
+  supported Boolean  @default(false)
+  coinType  Int      @default(118)
+  prefix    String
+  image     String?
+  wallets   Wallet[]
 }

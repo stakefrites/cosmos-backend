@@ -6,9 +6,9 @@ import {
   setupMintExtension,
   setupGovExtension,
   setupIbcExtension,
-} from "@cosmjs/stargate";
-import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
-import { mapFunction } from "../types/Wallet";
+} from '@cosmjs/stargate';
+import { Tendermint34Client } from '@cosmjs/tendermint-rpc';
+import { mapFunction } from '../types/Wallet';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function mapAsync(arr: any, fn: Function) {

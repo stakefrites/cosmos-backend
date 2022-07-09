@@ -50,7 +50,7 @@ export interface IAccountConfig {
 
 export interface IAccount {
   accounts: IAccountConfig[];
-  portfolios: IPortfolio[] | boolean[];
+  portfolios: IPortfolio[];
   tokens: ITokens[];
   userId: number;
   currency: Currency;
@@ -66,7 +66,7 @@ enum Currency {
 
 export interface IPortfolio {
   account: IAccountConfig;
-  wallets: IWallet[] | boolean[];
+  wallets: IWallet2[];
 }
 
 // WALLET
@@ -77,6 +77,17 @@ export interface IWallet {
   denom: string;
   decimals: number;
   tokens: ITokens;
+}
+
+export interface IWallet2 {
+  address: string;
+  network: {
+    name: string;
+  };
+  denom: string;
+  decimals: number;
+  tokens: ITokens;
+  holdings: any[];
 }
 
 // Tokens/Currency

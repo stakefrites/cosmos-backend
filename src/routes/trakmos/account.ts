@@ -1,27 +1,27 @@
-import express from "express";
+import express from 'express';
 
-import { AccountHandler } from "../../utils/Wallet";
-import { DatabaseHandler } from "../../db/controller";
+import { AccountHandler } from '../../utils/Wallet';
+import { DatabaseHandler } from '../../db/controller';
 
-import { IAccountConfig } from "../../types/Wallet";
+import { Currency, IAccountConfig } from '../../types/Wallet';
 
 interface ICreateAccount {
   accounts: IAccountConfig[];
   networks: string[];
-  userId: string;
-  currency: string;
+  userId: number;
+  currency: Currency;
 }
 
 const router = express.Router();
 const db = new DatabaseHandler();
 
-router.post("/", async (req, res) => {
-  const config: ICreateAccount = req.body.config;
+router.post('/', async (req, res) => {
+  const config: ICreateAccount = req.body;
   const found = await db.getAccount(config.userId);
   if (found) {
     res.json({
-      status: "error",
-      message: "An account already exists",
+      status: 'error',
+      message: 'An account already exists',
     });
   } else {
     const portfolio = await AccountHandler.Create(
@@ -33,32 +33,31 @@ router.post("/", async (req, res) => {
     const all = portfolio.serialize();
     const created = await db.createAccount(all);
     res.json({
-      status: "success",
-      account: created._id,
+      status: 'success',
+      account: created.id,
     });
   }
 });
 
-router.get("/:userId", async (req, res) => {
-
+router.get('/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
-    const found = await db.getAccount(userId);
+    const found = await db.getAccount(parseInt(userId));
     if (!found) {
       res.json({
-        status: "error",
-        message: "Not found!",
+        status: 'error',
+        message: 'Not found!',
       });
     } else {
       res.json({
-        status: "success",
+        status: 'success',
         account: found,
       });
     }
   } catch (e) {
     res.json({
-      status: "error",
-      message: "Not found!",
+      status: 'error',
+      message: 'Not found!',
     });
   }
 });
