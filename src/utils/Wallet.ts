@@ -1,9 +1,9 @@
-import _ from "lodash";
-import { fromBech32, toBech32 } from "@cosmjs/encoding";
-import { Decimal } from "@cosmjs/math";
+import _ from 'lodash';
+import { fromBech32, toBech32 } from '@cosmjs/encoding';
+import { Decimal } from '@cosmjs/math';
 
-import CosmosDirectory from "./CosmosDirectory";
-import { mapAsync, makeClient } from "./utils";
+import CosmosDirectory from './CosmosDirectory';
+import { mapAsync, makeClient } from './utils';
 
 import {
   IWalletBalance,
@@ -11,16 +11,17 @@ import {
   IAccount,
   IAccountConfig,
   IWallet,
+  IWallet2,
   ITokens,
   IPortfolio,
   Currency,
-} from "../types/Wallet";
+} from '../types/Wallet';
 import {
   DelegationResponse,
   CosmjsQueryClient,
   UnbondingDelegation,
   UnbondingDelegationEntry,
-} from "../types/Client";
+} from '../types/Client';
 
 const directory = new CosmosDirectory();
 
@@ -45,13 +46,13 @@ export class AccountHandler implements IAccount {
   accounts: IAccountConfig[];
   portfolios: PortfolioHandler[];
   tokens: IWalletBalance | any;
-  userId: string;
-  currency: string;
+  userId: number;
+  currency: Currency;
   constructor(
     accounts: IAccountConfig[],
     portfolios: PortfolioHandler[],
-    userId: string,
-    currency: string
+    userId: number,
+    currency: Currency
   ) {
     this.accounts = accounts;
     this.portfolios = portfolios;
@@ -68,13 +69,16 @@ export class AccountHandler implements IAccount {
   public static async Create(
     accounts: IAccountConfig[],
     networksName: string[],
-    userId: string,
-    currency: string
+    userId: number,
+    currency: Currency
   ): Promise<AccountHandler> {
     const portfolios = await mapAsync(
       accounts,
       async (account: IAccountConfig) => {
-        return await PortfolioHandler.Create(account, networksName);
+        return await PortfolioHandler.Create(
+          account,
+          networksName.map((n) => ({ name: n }))
+        );
       }
     );
     const account = new AccountHandler(accounts, portfolios, userId, currency);
@@ -84,8 +88,9 @@ export class AccountHandler implements IAccount {
 
   public static async Load(
     a: IAccount,
-    userId: string
+    userId: number
   ): Promise<AccountHandler> {
+    console.log(a, userId);
     const portfolios = await mapAsync(a.portfolios, async (p: IPortfolio) => {
       return await PortfolioHandler.Load(p.account, p.wallets);
     });
@@ -259,37 +264,36 @@ export class PortfolioHandler implements IPortfolio {
   }
   public static async Create(
     account: IAccountConfig,
-    networksName: string[]
+    networksName: { name: string }[]
   ): Promise<PortfolioHandler> {
     const wallets = await mapAsync(networksName, async (network: string) => {
-      if (network === "evmos" && account.evmosAddress) {
+      if (network === 'evmos' && account.evmosAddress) {
         return await WalletHandler.Create(
           await getAddress(account.evmosAddress, network),
-          network
+          { name: network }
         );
       } else {
         return await WalletHandler.Create(
-          await getAddress(account.bech32Address, network),
-          network
+          await getAddress(account.cosmosAddress, network),
+          { name: network }
         );
       }
     });
-    const portfolio = new PortfolioHandler(account, wallets);
-    return portfolio;
+    return new PortfolioHandler(account, wallets);
   }
 
   public static async Load(
     account: IAccountConfig,
-    wallets: IWallet[] | boolean[]
+    wallets: IWallet2[] | boolean[]
   ): Promise<PortfolioHandler> {
+    console.log('loading portfolios');
     const walletHandlers: WalletHandler[] = await mapAsync(
       wallets,
-      async (wallet: IWallet) => {
+      async (wallet: IWallet2) => {
         return await WalletHandler.Load(wallet);
       }
     );
-    const portfolio = new PortfolioHandler(account, walletHandlers);
-    return portfolio;
+    return new PortfolioHandler(account, walletHandlers);
   }
 
   serialize(): IPortfolio {
@@ -309,16 +313,27 @@ export class PortfolioHandler implements IPortfolio {
   }
 }
 
-export class WalletHandler implements IWallet {
+interface Position {
+  token: string;
+  amount: number;
+  type: PositionType;
+}
+
+type PositionType = 'staked' | 'rewards' | 'balance' | 'unbounding';
+
+class WalletHandler implements IWallet2 {
   address: string;
-  network: string;
+  network: {
+    name: string;
+  };
   denom: string;
   decimals: number;
+  holdings: Position[];
   tokens: ITokens;
   _client: CosmjsQueryClient;
   constructor(
     address: string,
-    network: string,
+    network: { name: string },
     client: CosmjsQueryClient,
     denom: string,
     decimals: number
@@ -328,6 +343,7 @@ export class WalletHandler implements IWallet {
     this._client = client;
     this.denom = denom;
     this.decimals = decimals;
+    this.holdings = [];
     this.tokens = {
       delegations: [],
       balance: [],
@@ -340,10 +356,10 @@ export class WalletHandler implements IWallet {
 
   public static async Create(
     address: string,
-    network: string
+    network: { name: string }
   ): Promise<WalletHandler> {
-    const client = await makeClient(directory.rpcUrl(network));
-    const chain = await directory.getChain(network);
+    const client = await makeClient(directory.rpcUrl(network.name));
+    const chain = await directory.getChain(network.name);
     const handler = new WalletHandler(
       address,
       network,
@@ -355,26 +371,32 @@ export class WalletHandler implements IWallet {
     return handler;
   }
 
-  public static async Load(w: IWallet) {
-    const client = await makeClient(directory.rpcUrl(w.network));
-    const handler = new WalletHandler(
-      w.address,
-      w.network,
-      client,
-      w.denom,
-      w.decimals
-    );
-    handler.tokens = w.tokens;
-    return handler;
+  public static async Load(w: IWallet2) {
+    console.log(w);
+    try {
+      const client = await makeClient(directory.rpcUrl(w.network.name));
+      const handler = new WalletHandler(
+        w.address,
+        w.network,
+        client,
+        w.denom,
+        w.decimals
+      );
+      handler.tokens = w.tokens;
+      return handler;
+    } catch (e: any) {
+      console.log(e.message);
+    }
   }
 
-  serialize(): IWallet {
+  serialize(): IWallet2 {
     return {
       address: this.address,
       network: this.network,
       denom: this.denom,
       decimals: this.decimals,
       tokens: this.tokens,
+      holdings: this.holdings,
     };
   }
 
@@ -384,6 +406,11 @@ export class WalletHandler implements IWallet {
     );
     const amount = reduce(delegations.delegationResponses, this.decimals);
     const denom = this.denom;
+    this.holdings.push({
+      amount: amount.toFloatApproximation(),
+      token: this.denom,
+      type: 'staked',
+    });
     return { amount: amount.toFloatApproximation(), denom };
   };
 
@@ -425,12 +452,22 @@ export class WalletHandler implements IWallet {
         acc.plus(Decimal.fromAtomics(data.amount, this.decimals + 18)),
       Decimal.zero(this.decimals + 18)
     );
+    this.holdings.push({
+      amount: amount.toFloatApproximation(),
+      token: this.denom,
+      type: 'rewards',
+    });
     return { amount: amount.toFloatApproximation(), denom };
   };
 
   fetchBalance = async () => {
     const balance = await this._client.bank.balance(this.address, this.denom);
     const amount = Decimal.fromAtomics(balance.amount, this.decimals);
+    this.holdings.push({
+      amount: amount.toFloatApproximation(),
+      token: this.denom,
+      type: 'balance',
+    });
     return { amount: amount.toFloatApproximation(), denom: this.denom };
   };
 
@@ -451,3 +488,20 @@ export class WalletHandler implements IWallet {
     });
   };
 }
+
+const accounts = [
+  {
+    cosmosAddress: 'cosmos1weeu5yuj8n23hd87wsdxqqgfmzzz9zt60cwnnz',
+    evmosAddress: 'evmos10zee9936pfxsuvfmenk4vcn70uywnr7zpqgz0c',
+    name: 'Jean',
+  },
+];
+const networks = ['cosmoshub', 'juno'];
+
+const testAccount = async () => {
+  //const account = await AccountHandler.Create(accounts, networks, 1, 'cad');
+  const wallet2 = await WalletHandler.Create(
+    'cosmos1zjq5sn0fea6wslhu4kmxlxvluxjs9cpgeu939m',
+    { name: 'cosmoshub' }
+  );
+};

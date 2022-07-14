@@ -1,20 +1,20 @@
-import axios from "axios";
+import axios from 'axios';
 
 export class Price {
   baseUrl: string;
   version: string;
   constructor() {
-    this.baseUrl = "https://api.coingecko.com/api/";
-    this.version = "v3/";
+    this.baseUrl = 'https://api.coingecko.com/api/';
+    this.version = 'v3/';
   }
   async getPrice(id: string) {
     try {
       const response = await axios.get(
-        this.baseUrl + this.version + "simple/price",
+        this.baseUrl + this.version + 'simple/price',
         {
           params: {
             ids: id,
-            vs_currencies: "usd,cad,eur",
+            vs_currencies: 'usd,cad,eur',
           },
         }
       );
@@ -30,12 +30,12 @@ export class Price {
   async get14DaysMarketChartByCurrency(id: string, currency: string) {
     try {
       const response = await axios.get(
-        this.baseUrl + this.version + id + "/market_chart",
+        this.baseUrl + this.version + id + '/market_chart',
         {
           params: {
             vs_currency: currency,
             days: 14,
-            interval: "daily",
+            interval: 'daily',
           },
         }
       );

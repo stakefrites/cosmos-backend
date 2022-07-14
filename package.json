@@ -9,7 +9,11 @@
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix",
     "build": "tsc",
-    "start": "node dist/src/index.js"
+    "start": "node dist/src/index.js",
+    "prisma:generate": "npx prisma generate --schema=../prisma/schema.prisma",
+    "prisma:studio": "npx prisma studio --schema=../prisma/schema.prisma",
+    "prisma:format": "npx prisma format --schema=../prisma/schema.prisma",
+    "prisma:migrate": "npx prisma migrate dev --name firstmigration --schema=../prisma/schema.prisma"
   },
   "license": "MIT",
   "dependencies": {
@@ -17,6 +21,7 @@
     "@cosmjs/math": "^0.28.4",
     "@cosmjs/stargate": "^0.28.4",
     "@cosmjs/tendermint-rpc": "^0.28.4",
+    "@prisma/client": "4.0.0",
     "axios": "^0.27.2",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
@@ -28,6 +33,7 @@
     "lodash": "^4.17.21",
     "mongoose": "^6.3.6",
     "node-cron": "^3.0.1",
+    "prisma": "^4.0.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

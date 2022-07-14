@@ -7,7 +7,7 @@ import {
   BankExtension,
   DistributionExtension,
   Coin,
-} from "@cosmjs/stargate";
+} from '@cosmjs/stargate';
 
 export interface DelegationResponse {
   delegation?: Delegation;

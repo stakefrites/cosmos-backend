@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 
 class CosmosDirectory {
   directoryProtocol: string;
@@ -8,8 +8,8 @@ class CosmosDirectory {
   restBase: string;
   validatorsUrl: string;
   constructor() {
-    this.directoryProtocol = "https";
-    this.directoryDomain = "cosmos.directory";
+    this.directoryProtocol = 'https';
+    this.directoryDomain = 'cosmos.directory';
     this.rpcBase = `${this.directoryProtocol}://rpc.${this.directoryDomain}`;
     this.restBase = `${this.directoryProtocol}://rest.${this.directoryDomain}`;
     this.chainsUrl = `${this.directoryProtocol}://chains.${this.directoryDomain}`;
@@ -17,11 +17,11 @@ class CosmosDirectory {
   }
 
   rpcUrl = (name: string) => {
-    return this.rpcBase + "/" + name;
+    return this.rpcBase + '/' + name;
   };
 
   restUrl = (name: string) => {
-    return this.restBase + "/" + name;
+    return this.restBase + '/' + name;
   };
 
   getChains = async (): Promise<any> => {
@@ -36,17 +36,17 @@ class CosmosDirectory {
 
   getChainData = async (name: string): Promise<any> => {
     return axios
-      .get([this.chainsUrl, name, "chain"].join("/"))
+      .get([this.chainsUrl, name, 'chain'].join('/'))
       .then((res) => res.data);
   };
 
   getChain = async (name: string): Promise<any> => {
-    return axios.get([this.chainsUrl, name].join("/")).then((res) => res.data);
+    return axios.get([this.chainsUrl, name].join('/')).then((res) => res.data);
   };
 
   getTokenData = async (name: string): Promise<any> => {
     return axios
-      .get([this.chainsUrl, name, "assetlist"].join("/"))
+      .get([this.chainsUrl, name, 'assetlist'].join('/'))
       .then((res) => res.data);
   };
 }
